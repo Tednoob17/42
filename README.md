@@ -6,6 +6,7 @@
 
 ## Table of Contents
 
+- [Holy Graph](#-holy-graph)
 - [Overview](#overview)
 - [Repository Structure](#repository-structure)
 - [Global Projects](#-global-projects)
@@ -32,6 +33,23 @@
 - [File Types](#file-types)
 - [How to Use](#how-to-use)
 - [Disclaimer](#disclaimer)
+
+---
+
+## 🗺 Holy Graph
+
+The **Holy Graph** is the visual roadmap of the entire 42 curriculum. It shows how projects connect, unlock, and branch into specializations.
+
+<p align="center">
+  <img src="images/Holygraph-t.webp" alt="42 Holy Graph" width="100%" />
+</p>
+
+<details>
+<summary>📘 Legend</summary>
+<p align="center">
+  <img src="images/legendes.webp" alt="Holy Graph Legend" width="400" />
+</p>
+</details>
 
 ---
 
@@ -283,6 +301,10 @@ Advanced elective tracks for post-common-core 42 students.
 
 ### Algo, AI & Data
 
+<p align="center">
+  <img src="images/Algo-IA-Data.webp" alt="Algo, AI & Data — Holy Graph" width="90%" />
+</p>
+
 Algorithms, artificial intelligence, and data science projects.
 
 | Project | Subject | Resources | Description |
@@ -303,6 +325,10 @@ Algorithms, artificial intelligence, and data science projects.
 
 ### Cryptography & Maths
 
+<p align="center">
+  <img src="images/Crypto-Math.webp" alt="Cryptography & Maths — Holy Graph" width="90%" />
+</p>
+
 Cryptography implementations and mathematical computing.
 
 | Project | Subject | Resources | Description |
@@ -317,6 +343,10 @@ Cryptography implementations and mathematical computing.
 | **ready_set_boole** | [en.subject.pdf](Specialization/Cryptography%20%26%20Maths/ready_set_boole/en.subject.pdf) | — | Boolean algebra & set theory |
 
 ### Cybersecurity
+
+<p align="center">
+  <img src="images/Cybersecurity.webp" alt="Cybersecurity — Holy Graph" width="90%" />
+</p>
 
 Security, binary exploitation, and systems hardening.
 
@@ -343,6 +373,10 @@ Security, binary exploitation, and systems hardening.
 
 ### Development
 
+<p align="center">
+  <img src="images/Developpement.webp" alt="Development — Holy Graph" width="90%" />
+</p>
+
 Software engineering and design projects.
 
 | Project | Subject | Description |
@@ -357,6 +391,10 @@ Software engineering and design projects.
 
 ### DevOps
 
+<p align="center">
+  <img src="images/DevOps.webp" alt="DevOps — Holy Graph" width="90%" />
+</p>
+
 Infrastructure, containerization, and network operations.
 
 | Project | Subject | Description |
@@ -369,6 +407,10 @@ Infrastructure, containerization, and network operations.
 | **BGP at Doors** | [en.subject.pdf](Specialization/Devops/Bgp_At_Doors_of_Autonomous_Systems_is_Simple_(Network,_GNS3)/en.subject.pdf) | BGP routing with GNS3 |
 
 ### Graphics & Gaming
+
+<p align="center">
+  <img src="images/Graphics-Gaming.webp" alt="Graphics & Gaming — Holy Graph" width="90%" />
+</p>
 
 Computer graphics, 3D rendering, and game engines.
 
@@ -391,6 +433,10 @@ Computer graphics, 3D rendering, and game engines.
 | **xv** | [en.subject.pdf](Specialization/Graphics%20%26%20Gaming/xv/en.subject.pdf) | [XV_resources.zip](Specialization/Graphics%20%26%20Gaming/xv/XV_resources.zip) | Image viewer |
 
 ### System & Kernel
+
+<p align="center">
+  <img src="images/System-Kernel.webp" alt="System & Kernel — Holy Graph" width="90%" />
+</p>
 
 Low-level systems programming and kernel development.
 
@@ -421,6 +467,10 @@ Low-level systems programming and kernel development.
 | **kfs-x** | [en.subject.pdf](Specialization/System%20%26%20Kernel/kfs-x/en.subject.pdf) | Extended KFS project |
 
 ### Web & Mobile
+
+<p align="center">
+  <img src="images/Web-Mobile.webp" alt="Web & Mobile — Holy Graph" width="90%" />
+</p>
 
 Full-stack web applications and mobile development.
 
