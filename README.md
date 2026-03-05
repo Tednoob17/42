@@ -148,7 +148,7 @@ Intensive bootcamp modules designed to build foundational skills in a specific t
 |--------|---------|-------|
 | Python 0 — Starting | `en.subject.pdf` | Python basics & environment setup |
 | Python 1 — Array | `en.subject.pdf` | NumPy arrays & operations |
-| Python 2 — DataTable | `en.subject.pdf` | Pandas DataFrames |
+| Python 2 — DataTable | `en.subject.pdf` | Pandas DataFrames *(includes 3 CSV datasets)* |
 | Python 3 — OOP | `en.subject.pdf` | Object-Oriented Programming in Python |
 | Python 4 — Dod | `en.subject.pdf` | Data-Oriented Design |
 
@@ -157,7 +157,7 @@ Intensive bootcamp modules designed to build foundational skills in a specific t
 | Module | Subject | Resources | Topic |
 |--------|---------|-----------|-------|
 | Data Science 0 | `en.subject.pdf` | `subject.zip` | Data Science fundamentals |
-| Data Science 2 | `en.subject.pdf` | — | Advanced data science |
+| Data Science 2 | `en.subject.pdf` | `data_2023_feb.csv` | Advanced data science |
 
 ### Django Pool
 
@@ -290,11 +290,11 @@ Algorithms, artificial intelligence, and data science projects.
 | **corewar** | `en.subject.pdf` | `vm_champs.zip`, `en.warning.pdf`, `fr.resources.pdf` | Virtual machine & assembly language battle |
 | **dslr** | `en.subject.pdf` | `datasets.tgz` | Data Science & logistic regression |
 | **expert-system** | `en.subject.pdf` | — | Backward-chaining expert system |
-| **ft_linear_regression** | `en.subject.pdf` | — | Linear regression from scratch |
+| **ft_linear_regression** | `en.subject.pdf` | `data.csv` | Linear regression from scratch |
 | **gomoku** | `en.subject.pdf` | — | Go-Moku AI opponent |
 | **krpsim** | `en.subject.pdf` | `resources.tgz` | Resource process simulator |
 | **lem_in** | `en.subject.pdf` | — | Graph traversal — ant colony pathfinding |
-| **multilayer-perceptron** | `en.subject.pdf` | — | Neural network from scratch |
+| **multilayer-perceptron** | `en.subject.pdf` | `data.csv` | Neural network from scratch |
 | **n-puzzle** | `en.subject.pdf` | — | N-puzzle solver (A*, IDA*) |
 | **rubik** | `en.subject.pdf` | — | Rubik's Cube solver |
 | **total-perspective-vortex** | `en.subject.pdf` | — | ML with dimensionality reduction |
@@ -320,26 +320,26 @@ Cryptography implementations and mathematical computing.
 
 Security, binary exploitation, and systems hardening.
 
-| Project | Subject | Description |
-|---------|---------|-------------|
-| **Born2beroot** | `en.subject.pdf` | Virtual machine setup & system administration |
-| **Snow-Crash** | `en.subject.pdf` | Binary exploitation & privilege escalation |
-| **rainfall** | `en.subject.pdf` | Buffer overflow & exploit challenges |
-| **override** | `en.subject.pdf` | Advanced binary exploitation |
-| **darkly** | `en.subject.pdf` | Web vulnerability discovery |
-| **boot2root** | `en.subject.pdf` | Full system penetration testing |
-| **ft_nmap** | `en.subject.pdf` | Network scanner implementation |
-| **ft_malcolm** | `en.subject.pdf` | ARP spoofing / network security |
-| **ft_shield** | `en.subject.pdf` | System defense & hardening |
-| **dr-quine** | `en.subject.pdf` | Self-replicating programs (quines) |
-| **woody-woodpacker** | `en.subject.pdf` | ELF binary packing *(includes `resources.tgz`)* |
-| **famine** | `en.subject.pdf` | Virus behavior analysis |
-| **pestilence** | `en.subject.pdf` | Advanced virus concepts |
-| **war** | `en.subject.pdf` | Network warfare |
-| **death** | `en.subject.pdf` | Reversing & cracking |
-| **Retro-MFA** | `en.subject.pdf` | Multi-factor authentication *(includes `MFA.tgz`)* |
-| **Cybersecurity-Vaccine-Web** | `en.subject.pdf` | Web security testing |
-| **tinky-winky** | `en.subject.pdf` | Windows malware analysis |
+| Project | Subject | Resources | Description |
+|---------|---------|-----------|-------------|
+| **Born2beroot** | `en.subject.pdf` | — | Virtual machine setup & system administration |
+| **Snow-Crash** | `en.subject.pdf` | `SnowCrash.iso` | Binary exploitation & privilege escalation |
+| **rainfall** | `en.subject.pdf` | `RainFall.iso` | Buffer overflow & exploit challenges |
+| **override** | `en.subject.pdf` | `OverRide.iso` | Advanced binary exploitation |
+| **darkly** | `en.subject.pdf` | `Darkly_i386.iso` | Web vulnerability discovery |
+| **boot2root** | `en.subject.pdf` | `BornToSecHackMe-v1.1.iso` | Full system penetration testing |
+| **ft_nmap** | `en.subject.pdf` | — | Network scanner implementation |
+| **ft_malcolm** | `en.subject.pdf` | — | ARP spoofing / network security |
+| **ft_shield** | `en.subject.pdf` | — | System defense & hardening |
+| **dr-quine** | `en.subject.pdf` | — | Self-replicating programs (quines) |
+| **woody-woodpacker** | `en.subject.pdf` | `resources.tgz` | ELF binary packing |
+| **famine** | `en.subject.pdf` | — | Virus behavior analysis |
+| **pestilence** | `en.subject.pdf` | — | Advanced virus concepts |
+| **war** | `en.subject.pdf` | — | Network warfare |
+| **death** | `en.subject.pdf` | — | Reversing & cracking |
+| **Retro-MFA** | `en.subject.pdf` | `MFA.tgz` | Multi-factor authentication |
+| **Cybersecurity-Vaccine-Web** | `en.subject.pdf` | — | Web security testing |
+| **tinky-winky** | `en.subject.pdf` | — | Windows malware analysis |
 
 ### Development
 
@@ -438,6 +438,8 @@ Full-stack web applications and mobile development.
 | `.tar.gz` | 18 | Compressed resource archives (starter code, configs) |
 | `.tgz` | 35 | Compressed libraries & resources (minilibx, datasets) |
 | `.zip` | 8 | Compressed resources (maps, datasets, tools) |
+| `.iso` | 5 | Virtual machine disk images (cybersecurity challenges) |
+| `.csv` | 6 | Datasets for ML & data science projects |
 
 ---
 
