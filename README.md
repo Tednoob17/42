@@ -458,7 +458,7 @@ Full-stack web applications and mobile development.
 
 ## Disclaimer
 
-This repository is an **archive of 42 School project subjects** for reference purposes. It does not contain student solutions. All project descriptions and materials are the intellectual property of [42 School](https://42.fr/).
+This repository is an **archive of 42 School project subjects** for reference purposes. It does not contain student solutions.  
 
 > *"42 is a future-proof computer science training to educate the next generation of software engineers. The program takes a project-based approach to progress and is designed to develop technical and people skills that are necessary in today's ever changing world."*
 
