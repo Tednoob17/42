@@ -79,11 +79,11 @@ This repository contains **215+ subject PDFs** and **60+ resource archives** spa
 ├── Pool/                    # Piscine (Bootcamp) modules
 │   ├── C Pool/              # 14 C exercises + 2 Shell modules
 │   ├── CPP Pool/            # 9 C++ OOP modules (00–08)
- │   ├── Python_for_Data_Science/  # 5 Python modules
- │   ├── Piscine_Data_Science/     # 2 Data Science modules
- │   ├── Php Pool/                # 12 PHP modules
- │   ├── iOS_Swift/               # 12 Swift modules
- │   ├── Django Pool/             # 9 Django web framework modules
+│   ├── Python_for_Data_Science/  # 5 Python modules
+│   ├── Piscine_Data_Science/     # 2 Data Science modules
+│   ├── Php Pool/                # 12 PHP modules
+│   ├── iOS_Swift/               # 12 Swift modules
+│   ├── Django Pool/             # 9 Django web framework modules
 │   ├── RoR Pool/            # 8 Ruby on Rails modules
 │   ├── Pool Symfony/        # 9 Symfony PHP framework modules
 │   ├── Ocaml Pool/          # 9 functional programming modules
