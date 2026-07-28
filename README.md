@@ -14,12 +14,14 @@
   - [C Pool](#c-pool)
   - [C++ Pool](#c-pool-1)
   - [Python for Data Science](#python-for-data-science)
-  - [Data Science Pool](#data-science-pool)
-  - [Django Pool](#django-pool)
-  - [Ruby on Rails Pool](#ruby-on-rails-pool)
-  - [Symfony Pool](#symfony-pool)
-  - [OCaml Pool](#ocaml-pool)
-  - [Unity Pool](#unity-pool)
+   - [Data Science Pool](#data-science-pool)
+   - [Php Pool](#php-pool)
+   - [Django Pool](#django-pool)
+   - [Ruby on Rails Pool](#ruby-on-rails-pool)
+   - [Symfony Pool](#symfony-pool)
+   - [OCaml Pool](#ocaml-pool)
+   - [Unity Pool](#unity-pool)
+   - [iOS Swift Pool](#ios-swift-pool)
 - [Unix Branch](#-unix-branch)
 - [Specializations](#-specializations)
   - [Algo, AI & Data](#algo-ai--data)
@@ -77,9 +79,11 @@ This repository contains **215+ subject PDFs** and **60+ resource archives** spa
 ├── Pool/                    # Piscine (Bootcamp) modules
 │   ├── C Pool/              # 14 C exercises + 2 Shell modules
 │   ├── CPP Pool/            # 9 C++ OOP modules (00–08)
-│   ├── Python_for_Data_Science/  # 5 Python modules
-│   ├── Piscine_Data_Science/     # 2 Data Science modules
-│   ├── Django Pool/         # 9 Django web framework modules
+ │   ├── Python_for_Data_Science/  # 5 Python modules
+ │   ├── Piscine_Data_Science/     # 2 Data Science modules
+ │   ├── Php Pool/                # 12 PHP modules
+ │   ├── iOS_Swift/               # 12 Swift modules
+ │   ├── Django Pool/             # 9 Django web framework modules
 │   ├── RoR Pool/            # 8 Ruby on Rails modules
 │   ├── Pool Symfony/        # 9 Symfony PHP framework modules
 │   ├── Ocaml Pool/          # 9 functional programming modules
@@ -176,6 +180,44 @@ Intensive bootcamp modules designed to build foundational skills in a specific t
 |--------|---------|-----------|-------|
 | Data Science 0 | [en.subject.pdf](Pool/Piscine_Data_Science/Data_Science-0/en.subject.pdf) | [subject.zip](Pool/Piscine_Data_Science/Data_Science-0/subject.zip) | Data Science fundamentals |
 | Data Science 2 | [en.subject.pdf](Pool/Piscine_Data_Science/Data_Science-2/en.subject.pdf) | [data_2023_feb.csv](Pool/Piscine_Data_Science/Data_Science-2/data_2023_feb.csv) | Advanced data science |
+
+### Php Pool
+
+12 modules for PHP web development fundamentals.
+
+| Module | Subject | Topic |
+|--------|---------|-------|
+| Php 00 | [D00.pdf](Pool/Php%20Pool/D00.pdf) | PHP basics |
+| Php 01 | [D01.pdf](Pool/Php%20Pool/D01.pdf) | Variables & types |
+| Php 02 | [D02.pdf](Pool/Php%20Pool/D02.pdf) | Control structures |
+| Php 03 | [D03.pdf](Pool/Php%20Pool/D03.pdf) | Functions |
+| Php 04 | [D04.pdf](Pool/Php%20Pool/D04.pdf) | Superglobals |
+| Php 05 | [D05.pdf](Pool/Php%20Pool/D05.pdf) | Databases |
+| Php 06 | [D06.pdf](Pool/Php%20Pool/D06.pdf) | Sessions & cookies |
+| Php 07 | [D07.pdf](Pool/Php%20Pool/D07.pdf) | OOP basics |
+| Php 08 | [D08.pdf](Pool/Php%20Pool/D08.pdf) | Advanced OOP |
+| Php 09 | [D09.pdf](Pool/Php%20Pool/D09.pdf) | MVC pattern |
+| Rush 00 | [rush00.pdf](Pool/Php%20Pool/rush00.pdf) | Rush project 1 |
+| Rush 01 | [rush01.pdf](Pool/Php%20Pool/rush01.pdf) | Rush project 2 |
+
+### iOS Swift Pool
+
+12 modules for iOS development with Swift.
+
+| Module | Subject | Topic |
+|--------|---------|-------|
+| iOS 00 | [D00.pdf](Pool/iOS_Swift/D00.pdf) | Swift basics |
+| iOS 01 | [D01.pdf](Pool/iOS_Swift/D01.pdf) | Variables & constants |
+| iOS 02 | [D02.pdf](Pool/iOS_Swift/D02.pdf) | Control flow |
+| iOS 03 | [D03.pdf](Pool/iOS_Swift/D03.pdf) | Functions |
+| iOS 04 | [D04.pdf](Pool/iOS_Swift/D04.pdf) | Collections |
+| iOS 05 | [D05.pdf](Pool/iOS_Swift/D05.pdf) | Optionals |
+| iOS 06 | [D06.pdf](Pool/iOS_Swift/D06.pdf) | Structures & classes |
+| iOS 07 | [D07.pdf](Pool/iOS_Swift/D07.pdf) | OOP in Swift |
+| iOS 08 | [D08.pdf](Pool/iOS_Swift/D08.pdf) | Protocols & delegates |
+| iOS 09 | [D09.pdf](Pool/iOS_Swift/D09.pdf) | iOS fundamentals |
+| Rush 00 | [rush00.pdf](Pool/iOS_Swift/rush00.pdf) | Rush project 1 |
+| Rush 01 | [rush01.pdf](Pool/iOS_Swift/rush01.pdf) | Rush project 2 |
 
 ### Django Pool
 
