@@ -1,0 +1,28 @@
+{
+  "exercise": "A-EPI-005-conference-reproduction/ex02",
+  "title": "Démonstration de variant hunt",
+  "difficulty": "hard",
+  "points": 5,
+  "timeout": 30,
+  "tests": [
+    {
+      "name": "File exists: ex02/demo.md",
+      "type": "file_exists",
+      "file": "ex02/demo.md"
+    },
+    {
+      "name": "ex02/demo.md has minimum length",
+      "type": "custom",
+      "command": "f=\"ex02/demo.md\"; [ -s \"$f\" ] || exit 1; [ \"$(wc -c < \"$f\")\" -gt 120 ] || exit 1; echo OK",
+      "expected_exit": 0,
+      "timeout": 10
+    },
+    {
+      "name": "Directory exists: ex02/demo",
+      "type": "custom",
+      "command": "[ -d \"ex02/demo\" ] || exit 1; echo OK",
+      "expected_exit": 0,
+      "timeout": 10
+    }
+  ]
+}

@@ -1,0 +1,343 @@
+\documentclass{training}
+\schoollogo{../../../resources/latex/crack.pdf}
+\input{../../../resources/latex/epiag-preamble.tex}
+
+\begin{document}
+
+\title{nf\_tables : dispersion architecturale --- M-EPI-003}
+\subtitle{Transactions, générations et twins}
+\member{Ted ``Tedsig42'' Kouhouenou}{ted.sig42@tutamail.com}
+\summary{Lire l'architecture transactionnelle de nf\_tables, comprendre pourquoi trois CVE différents partagent la même racine structurelle, et apprendre à distinguer un twin réel d'une simple ressemblance de nom.}
+\version{1.0}
+\prerequisite{M-EPI-000 à M-EPI-002, bases de C et de netfilter}
+\maketitle
+
+\newpage
+\tableofcontents
+\newpage
+
+\chapter{Instructions}
+\begin{itemize}
+  \item Une journée. Le module est dense : lisez les sections avant de coder.
+  \item Travaillez sur une copie locale du noyau, jamais sur une machine de production.
+  \item Aucun exploit, aucun module noyau chargeable sur une cible réelle.
+  \item Les schémas et les commandes font partie du rendu.
+\end{itemize}
+
+\input{../../../resources/latex/deliverable-header.tex}
+\input{../../../resources/latex/common-instructions.fr.tex}
+\input{../../../resources/latex/ai-instructions.fr.tex}
+
+\chapter{Avant-propos}
+
+nf\_tables est un \emph{Logical Engine} au sens du papier : des objets
+(règles, sets, éléments, chaînes) sont créés, activés, désactivés et
+détruits dans des transactions. Le sous-système utilise deux idées
+centrales :
+
+\begin{itemize}
+  \item \textbf{la génération} : une transaction prépare un état futur sans
+        modifier immédiatement l'état visible ;
+  \item \textbf{le commit} : le passage d'une génération à la suivante rend
+        les changements visibles, tandis que les anciens objets peuvent
+        encore être référencés par des lecteurs concurrents.
+\end{itemize}
+
+Quand un correctif ajoute un test dans une fonction, il faut donc demander :
+\emph{ce test porte-t-il sur la génération courante ou sur la génération
+suivante ?} C'est exactement la question qui distingue
+\texttt{nft\_is\_active()} de \texttt{nft\_is\_active\_next()}.
+
+\begin{info}
+Le papier parle de \emph{architectural scatter} : la même forme de bug
+apparaît dans plusieurs sous-systèmes parce que la racine est
+architecturale, pas parce qu'un correctif a été copié. nf\_tables en est
+l'exemple le plus lisible.
+\end{info}
+
+\chapter{Aperçu du module}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|c|l|c|c|}
+\hline
+\textbf{Ex} & \textbf{Titre} & \textbf{Difficulté} & \textbf{Points} \\ \hline
+00 & Carte d'architecture & Facile & 3 \\
+01 & CVE-2023-35001 : union et stride & Moyen & 4 \\
+02 & CVE-2024-1086 : NF\_DROP et errno & Moyen & 4 \\
+03 & CVE-2023-4244 vers CVE-2024-1085 & Difficile & 5 \\
+04 & Checklist de candidat & Difficile & 4 \\ \hline
+& \textbf{Total} & & \textbf{20} \\ \hline
+\end{tabularx}
+\end{center}
+
+\startexercices
+
+\chapter{Exercise 00}
+\extitle{Carte d'architecture}
+\turnindir{ex00}
+\exnumber{00}
+\exfiles{architecture.md}
+\exauthorize{grep, ctags, un éditeur de texte}
+\makeheaderfiles
+
+Dans \texttt{architecture.md}, dessinez ou décrivez la relation entre :
+
+\begin{enumerate}
+  \item une transaction (\texttt{struct nft\_trans}) ;
+  \item une génération (\texttt{genmask}, \texttt{nft\_genmask}) ;
+  \item un set et un élément de set ;
+  \item les fonctions \texttt{nft\_is\_active()} et
+        \texttt{nft\_is\_active\_next()} ;
+  \item le chemin de commit et le chemin de nettoyage (GC, abort,
+        destroy).
+\end{enumerate}
+
+Ajoutez une légende qui répond à ces questions :
+
+\begin{itemize}
+  \item Qui voit quel état pendant une transaction ?
+  \item Pourquoi un élément peut-il être actif pour un lecteur et inactif
+        pour un autre ?
+  \item Quels objets peuvent survivre au commit et être libérés plus tard ?
+\end{itemize}
+
+\hint{Ne recopiez pas la documentation mot pour mot. Votre schéma doit
+montrer \emph{qui lit quoi, quand}.}
+
+\chapter{Exercise 01}
+\extitle{CVE-2023-35001 : union et stride}
+\turnindir{ex01}
+\exnumber{01}
+\exfiles{cve-2023-35001.md}
+\exauthorize{git, grep, un éditeur de texte}
+\makeheaderfiles
+
+CVE-2023-35001 est un accès hors limites dans l'évaluation de
+\texttt{nft\_byteorder}. Le papier le classe comme un cas de dispersion
+architecturale, pas comme un simple bug de validation d'entrée.
+
+\subsection*{Mission}
+
+Dans \texttt{cve-2023-35001.md} :
+
+\begin{enumerate}
+  \item Décrivez la structure \texttt{nft\_byteorder} et la manière dont
+        les champs de registre sont lus.
+  \item Expliquez pourquoi une valeur d'entrée apparemment valide peut
+        produire un accès hors limites.
+  \item Quelle hypothèse le correctif ajoute-t-il ? Porte-t-il sur la
+        valeur, sur l'index, ou sur la taille ?
+  \item Pourquoi ce correctif ne suffit-il pas à protéger les autres
+        opérations qui manipulent des registres ?
+\end{enumerate}
+
+\subsection*{Sources}
+\begin{itemize}
+  \item NVD : \url{https://nvd.nist.gov/vuln/detail/CVE-2023-35001}
+  \item Analyse publique :
+        \url{https://pwning.tech/nftables/}
+  \item Commit de correction :
+        \url{https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c1592a89942e9678f7d9c8030efa777c0d57edab}
+\end{itemize}
+
+\chapter{Exercise 02}
+\extitle{CVE-2024-1086 : NF\_DROP et errno}
+\turnindir{ex02}
+\exnumber{02}
+\exfiles{cve-2024-1086.md}
+\exauthorize{git, grep, un éditeur de texte}
+\makeheaderfiles
+
+CVE-2024-1086 est un double free dans le chemin de verdict de nf\_tables.
+Le point important n'est pas la valeur de retour elle-même, mais ce que le
+reste de la pile fait de cette valeur.
+
+\subsection*{Mission}
+
+Dans \texttt{cve-2024-1086.md} :
+
+\begin{enumerate}
+  \item Décrivez le chemin \texttt{nft\_verdict\_init()} vers
+        \texttt{nf\_hook\_slow()}.
+  \item Pourquoi un verdict \texttt{NF\_DROP} accompagné d'un errno positif
+        est-il dangereux ?
+  \item Quelle hypothèse le correctif encode-t-il sur les valeurs de retour
+        autorisées ?
+  \item Cherchez un autre appelant qui suppose la même chose sans le
+        vérifier. Donnez le nom de la fonction et la commande utilisée.
+\end{enumerate}
+
+\begin{warn}
+La correction de CVE-2024-1086 ne rend pas nf\_tables « sûr ». Elle ferme
+un chemin précis. Votre analyse doit dire lequel, et lequel reste ouvert.
+\end{warn}
+
+\chapter{Exercise 03}
+\extitle{CVE-2023-4244 vers CVE-2024-1085}
+\turnindir{ex03}
+\exnumber{03}
+\exfiles{mutation-chain.md}
+\exauthorize{git, grep, un éditeur de texte}
+\makeheaderfiles
+
+Deux correctifs, cinq mois d'écart, le même sous-système. Le premier retire
+la marque « busy » et l'API de batch GC. Le second remplace un test de
+génération dans le chemin de désactivation des éléments catchall.
+
+\begin{console}
+- if (!nft_is_active(net, ext))
++ if (!nft_is_active_next(net, ext))
+      continue;
+\end{console}
+
+\subsection*{Mission}
+
+Dans \texttt{mutation-chain.md} :
+
+\begin{enumerate}
+  \item Identifiez le commit du premier correctif et ce qu'il retire
+        exactement.
+  \item Identifiez le commit du second correctif et la fonction modifiée.
+  \item Expliquez pourquoi le second bug était déjà présent avant le
+        premier correctif, mais \emph{atteignable} après.
+  \item Classez la relation : \emph{incomplete-fix variant} ou
+        \emph{architectural scatter}. Justifiez avec la définition du
+        papier.
+  \item Formulez la question d'audit qui aurait permis de trouver le second
+        bug en lisant le premier diff.
+  \item Comparez avec le double-free pipapo de CVE-2024-26809 : quel
+        drapeau (\texttt{priv->dirty}, \texttt{set->dead}) rend le chemin
+        de destruction atteignable, et pourquoi le correctif de
+        CVE-2024-1085 ne le ferme pas ?
+\end{enumerate}
+
+\subsection*{Sources}
+\begin{itemize}
+  \item Commit \texttt{a2dd0233cbc4} : suppression de la marque busy et de
+        l'API de batch GC.
+  \item Commit \texttt{b1db244ffd041a49ecc9618e8feb6b5c1afcdaa7} :
+        correction de CVE-2024-1085.
+  \item NVD : \url{https://nvd.nist.gov/vuln/detail/CVE-2024-1085}
+\end{itemize}
+
+\chapter{Exercise 04}
+\extitle{Checklist de candidat}
+\turnindir{ex04}
+\exnumber{04}
+\exfiles{candidate.md queries/}
+\exauthorize{grep, ctags, un éditeur de texte}
+\makeheaderfiles
+
+Choisissez une fonction de nf\_tables qui manipule un élément de set ou un
+verdict. Construisez une fiche de candidat, pas un exploit.
+
+La fiche doit contenir :
+
+\begin{enumerate}
+  \item \textbf{Objet} : quel objet est créé, activé, désactivé ou libéré ?
+  \item \textbf{Chemin nominal} : la séquence d'appels heureuse.
+  \item \textbf{Chemins d'abandon} : abort, GC, commit partiel, erreur.
+  \item \textbf{Génération} : le code lit-il l'état courant ou l'état
+        suivant ?
+  \item \textbf{Twins} : trois fonctions voisines et leur statut.
+  \item \textbf{Requêtes} : les commandes \texttt{grep}/\texttt{ctags}
+        utilisées, stockées dans \texttt{queries/}.
+  \item \textbf{Verdict} : faux positif, candidat à investiguer, ou
+        candidat à prioriser, avec un score de triage.
+\end{enumerate}
+
+\chapter{Rendu et évaluation}
+
+\begin{console}
+M-EPI-003-nf-tables/
+|-- ex00/architecture.md
+|-- ex01/cve-2023-35001.md
+|-- ex02/cve-2024-1086.md
+|-- ex03/mutation-chain.md
++-- ex04/
+    |-- candidate.md
+    +-- queries/
+\end{console}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|l|X|c|}
+\hline
+\textbf{Critère} & \textbf{Attendu} & \textbf{Points} \\ \hline
+Architecture & Génération et commit expliqués sans confusion & 4 \\ \hline
+CVE-2023-35001 & Lien entre structure, index et OOB & 4 \\ \hline
+CVE-2024-1086 & Chemin de verdict et double free & 4 \\ \hline
+Mutation & Distinction correcte entre les deux modes & 4 \\ \hline
+Candidat & Fiche reproductible, requêtes fournies & 4 \\ \hline
+\end{tabularx}
+\end{center}
+
+\chapter{Ressources par exercice}
+
+\subsection*{Exercice 00 --- Carte d'architecture}
+\begin{itemize}
+  \item nf\_tables :
+        \url{https://www.kernel.org/doc/html/latest/networking/nf_tables.html}
+  \item Papier, section 6.1.
+  \item Sources noyau : \url{https://git.kernel.org/}
+  \item À chercher : \texttt{nft\_trans}, \texttt{genmask},
+        \texttt{nft\_setelem}, \texttt{commit\_list}.
+\end{itemize}
+
+\subsection*{Exercice 01 --- CVE-2023-35001}
+\begin{itemize}
+  \item NVD : \url{https://nvd.nist.gov/vuln/detail/CVE-2023-35001}
+  \item Analyse : \url{https://pwning.tech/nftables/}
+  \item Papier, section 6.2.
+  \item À chercher : \texttt{nft\_byteorder}, \texttt{union},
+        \texttt{priv->len}, \texttt{stride}.
+\end{itemize}
+
+\subsection*{Exercice 02 --- CVE-2024-1086}
+\begin{itemize}
+  \item NVD : \url{https://nvd.nist.gov/vuln/detail/CVE-2024-1086}
+  \item Papier, section 6.2.
+  \item nf\_tables :
+        \url{https://www.kernel.org/doc/html/latest/networking/nf_tables.html}
+  \item À chercher : \texttt{NF\_DROP}, \texttt{NF\_ACCEPT},
+        \texttt{verdict}, \texttt{double free}, \texttt{nf\_hook\_slow}.
+\end{itemize}
+
+\subsection*{Exercice 03 --- CVE-2023-4244 vers CVE-2024-1085}
+\begin{itemize}
+  \item NVD, CVE-2023-4244 :
+        \url{https://nvd.nist.gov/vuln/detail/CVE-2023-4244}
+  \item NVD, CVE-2024-1085 :
+        \url{https://nvd.nist.gov/vuln/detail/CVE-2024-1085}
+  \item NVD, CVE-2024-26809 :
+        \url{https://nvd.nist.gov/vuln/detail/CVE-2024-26809}
+  \item OtterSec :
+        \url{https://osec.io/blog/netfilter-universal-root-1-day/}
+  \item Commit \texttt{b1db244ffd041a49ecc9618e8feb6b5c1afcdaa7}.
+  \item À chercher : \texttt{nft\_setelem\_catchall\_deactivate},
+        \texttt{set->dead}, \texttt{priv->dirty}, \texttt{nft\_pipapo\_destroy}.
+\end{itemize}
+
+\subsection*{Exercice 04 --- Checklist de candidat}
+\begin{itemize}
+  \item Papier, section 18.8.
+  \item Dépôt compagnon : \texttt{rules/TRIAGE.md}.
+  \item Semgrep : \url{https://semgrep.dev/docs/}
+  \item Weggli : \url{https://github.com/weggli-rs/weggli}
+  \item À chercher : \texttt{nft\_is\_active}, \texttt{\_deactivate},
+        \texttt{\_destroy}, \texttt{genmask}.
+\end{itemize}
+
+\chapter{Sources}
+\begin{itemize}
+  \item Phrack, \emph{Security is failure: Every Patch Is a Guess},
+        sections 6.2, 6.3 et 14.
+  \item Documentation nf\_tables :
+        \url{https://www.kernel.org/doc/html/latest/networking/nf_tables.html}
+  \item \texttt{pwning.tech/nftables} : analyse de CVE-2023-35001.
+  \item OtterSec, \emph{OtterRoot: Netfilter universal root 1-day} :
+        \url{https://osec.io/blog/netfilter-universal-root-1-day/}
+  \item NVD : CVE-2023-35001, CVE-2024-1086, CVE-2023-4244,
+        CVE-2024-1085, CVE-2024-26809.
+\end{itemize}
+
+\end{document}

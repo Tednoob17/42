@@ -1,0 +1,21 @@
+{
+  "exercise": "M-EPI-001-mutation-model/ex02",
+  "title": "Cartographier huit CVE",
+  "difficulty": "medium",
+  "points": 5,
+  "timeout": 30,
+  "tests": [
+    {
+      "name": "File exists: ex02/cve-family-map.md",
+      "type": "file_exists",
+      "file": "ex02/cve-family-map.md"
+    },
+    {
+      "name": "ex02/cve-family-map.md has minimum length",
+      "type": "custom",
+      "command": "f=\"ex02/cve-family-map.md\"; [ -s \"$f\" ] || exit 1; [ \"$(wc -c < \"$f\")\" -gt 120 ] || exit 1; echo OK",
+      "expected_exit": 0,
+      "timeout": 10
+    }
+  ]
+}

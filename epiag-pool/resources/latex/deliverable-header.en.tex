@@ -1,0 +1,113 @@
+\subsection*{Submission format --- mandatory header}
+
+Every file submitted in this module must begin with the header below,
+\textbf{adapted to the comment syntax of the language} used.
+
+\subsubsection*{Generic template}
+
+\begin{minted}{c}
+/**
+ * Module: <module code>
+ * Exercise: <exercise number>
+ * File: <file name>
+ * Author: <your JeuneCrack login>
+ *
+ * Description: <one sentence, not a novel>
+ *
+ * Return: <see below>
+ */
+\end{minted}
+
+\subsubsection*{Login}
+
+Your \textbf{JeuneCrack} identifier (e.g. \texttt{tedsig42}).
+For a two-person submission: \texttt{login1/login2}.
+Add a Matrix handle after the login if you wish
+(e.g. \texttt{tedsig42 @tedsig42}).
+
+\subsubsection*{Return --- depending on the file type}
+
+\begin{tabularx}{\linewidth}{lX}
+  \toprule
+  \textbf{File type} & \textbf{Return value} \\
+  \midrule
+  C (\texttt{.c}) &
+  \texttt{return (0);} (success),
+  \texttt{return (-1);} (error),
+  \texttt{return (value);} (computed result) \\
+
+  Python (\texttt{.py}) &
+  \texttt{0} (success),
+  \texttt{1} (error),
+  \texttt{N/A} (analysis, script without exit) \\
+
+  Shell (\texttt{.sh}) &
+  \texttt{exit 0} (success),
+  \texttt{exit 1} (error) \\
+
+  Markdown (\texttt{.md}) &
+  \texttt{N/A} --- analysis files have no return value \\
+
+  C/Python exploit &
+  \texttt{shell} (shell obtained),
+  \texttt{flag: <flag>} (flag captured),
+  \texttt{proof: <hash>} (proof of concept) \\
+
+  Binary (\texttt{.bin}) &
+  \texttt{N/A} --- no header for binary files \\
+  \bottomrule
+\end{tabularx}
+
+\subsubsection*{Examples per language}
+
+\textbf{C (\texttt{.c})}:
+\begin{minted}{c}
+/**
+ * Module: F-EXP-001
+ * Exercise: ex02
+ * File: exploit.c
+ * Author: tedsig42
+ *
+ * Description: Buffer overflow with ret2libc
+ *
+ * Return: 0
+ */
+\end{minted}
+
+\textbf{Python (\texttt{.py})}:
+\begin{minted}{python}
+# Module: F-WEB-001
+# Exercise: ex05
+# File: ssrf-exploit.py
+# Author: tedsig42
+#
+# Description: Blind SSRF bypass via redirect
+#
+# Return: 0
+\end{minted}
+
+\textbf{Shell (\texttt{.sh})}:
+\begin{minted}{bash}
+# Module: F-SUP-001
+# Exercise: ex03
+# File: dependency-confusion.sh
+# Author: tedsig42
+#
+# Description: Automated dependency confusion test
+#
+# Return: exit 0
+\end{minted}
+
+\textbf{Markdown (\texttt{.md})} --- analysis, report:
+\begin{Verbatim}[fontsize=\normalsize]
+<!--
+Module: M-SRC-001
+Exercise: ex04
+File: audit-report.md
+Author: tedsig42
+
+Description: Code audit of vulnerable-httpd
+
+Return: N/A
+-->
+\end{Verbatim}

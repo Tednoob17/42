@@ -1,0 +1,456 @@
+\documentclass{training}
+\schoollogo{../../../resources/latex/crack.pdf}
+\input{../../../resources/latex/epiag-preamble.tex}
+
+\begin{document}
+
+\title{Warm-ups croisés : Node.js, MINA, FreeBSD --- A-EPI-006}
+\subtitle{Trois domaines, trois familles, aucune excuse}
+\member{Ted ``Tedsig42'' Kouhouenou}{ted.sig42@tutamail.com}
+\summary{Module de raccord : couvrir les exemples du papier qui ne sont pas des CVE du noyau Linux. Node.js path.normalize, Apache MINA ObjectSerializationDecoder et les mappings FreeBSD/XNU montrent que les trois familles ne dépendent ni d'un langage, ni d'un éditeur, ni d'un noyau. Aucun exploit : uniquement des prédicats, des machines à états et des matrices de branches.}
+\version{1.0}
+\prerequisite{M-EPI-001, M-EPI-002, bases de JavaScript et de Java}
+\maketitle
+
+\newpage
+\tableofcontents
+\newpage
+
+\chapter{Instructions}
+\begin{itemize}
+  \item Deux jours.
+  \item Aucune cible réelle, aucun payload de désérialisation, aucun chemin
+        traversé sur un vrai système de fichiers.
+  \item Les tests Node.js se font avec \texttt{path.win32} sur des chaînes,
+        sans appel à \texttt{fs}.
+  \item Pour MINA, lisez les avis, les sources et les diffs ; ne construisez
+        pas de flux sérialisé malveillant.
+  \item Pour FreeBSD et XNU, travaillez à partir des avis publics et de la
+        section 18.11 du papier. Distinguez ce qui est démontré de ce qui
+        est seulement cartographié.
+\end{itemize}
+
+\input{../../../resources/latex/deliverable-header.tex}
+\input{../../../resources/latex/common-instructions.fr.tex}
+\input{../../../resources/latex/ai-instructions.fr.tex}
+
+\chapter{Avant-propos}
+
+Le papier ne parle pas seulement du noyau Linux. Il utilise trois
+\emph{warm-ups} pour prouver que son modèle survit au changement de domaine :
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|p{0.2\linewidth}|p{0.2\linewidth}|X|}
+\hline
+\textbf{Domaine} & \textbf{Famille} & \textbf{Pourquoi ce cas compte} \\ \hline
+Node.js & Predictive Oracle & Un prédicat de chemin croit modéliser Windows ;
+le système d'exploitation en sait plus que lui. \\ \hline
+Apache MINA & Logical Engine & L'ordre entre initialisation et vérification
+est une transition d'état, pas un simple \texttt{if} manquant. \\ \hline
+FreeBSD / XNU & Plusieurs & Le papier revendique une portée cross-kernel ;
+il faut vérifier ce qui est réellement documenté. \\ \hline
+\end{tabularx}
+\end{center}
+
+\begin{info}
+Un \emph{warm-up} n'est pas un exercice facile. C'est un cas réduit qui
+permet de voir la structure avant d'ajouter la complexité du noyau. Si vous
+savez expliquer Node.js et MINA, vous devez pouvoir expliquer nf\_tables,
+eBPF et io\_uring avec le même vocabulaire.
+\end{info}
+
+\chapter{Aperçu du module}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|c|l|c|c|}
+\hline
+\textbf{Ex} & \textbf{Titre} & \textbf{Difficulté} & \textbf{Points} \\ \hline
+00 & Node.js : le prédicat et le système & Moyen & 4 \\
+01 & MINA : l'ordre des opérations & Moyen & 4 \\
+02 & MINA : la matrice des branches & Difficile & 4 \\
+03 & FreeBSD/XNU : ce que le papier ne prouve pas & Difficile & 4 \\
+04 & Synthèse : tous les exemples du papier & Difficile & 4 \\ \hline
+& \textbf{Total} & & \textbf{20} \\ \hline
+\end{tabularx}
+\end{center}
+
+\startexercices
+
+\chapter{Exercise 00}
+\extitle{Node.js : le prédicat et le système}
+\turnindir{ex00}
+\exnumber{00}
+\exfiles{node-paths.md path-model.js}
+\exauthorize{Node.js, un éditeur de texte, documentation Windows}
+\makeheaderfiles
+
+\texttt{path.normalize()} et \texttt{path.join()} analysent une chaîne avant
+que le système de fichiers ne l'utilise. C'est un Predictive Oracle : le
+prédicat décide qu'un chemin est sûr, puis le système d'exploitation lui
+donne un sens différent.
+
+Le papier décrit trois générations :
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|p{0.25\linewidth}|X|X|}
+\hline
+\textbf{CVE / cas} & \textbf{Hypothèse du correctif} & \textbf{Angle mort} \\ \hline
+CVE-2025-23084 & Un chemin qui ne commence pas par une lettre de lecteur
+est relatif. & \texttt{C:..\textbackslash{}sensitive} est relatif au
+répertoire courant du lecteur C:. \\ \hline
+CVE-2025-27210 & Filtrer les noms de lecteur suffit à bloquer les chemins
+Windows spéciaux. & \texttt{CON}, \texttt{PRN}, \texttt{AUX}, \texttt{NUL},
+\texttt{COM1-9}, \texttt{LPT1-9} sont des périphériques, pas des
+répertoires. \\ \hline
+UNC non assigné & Filtrer les noms de périphériques suffit. & Les chemins
+UNC \texttt{\textbackslash\textbackslash{}serveur\textbackslash{}partage}
+restent valides et peuvent sortir du sous-arbre prévu. \\ \hline
+\end{tabularx}
+\end{center}
+
+\subsection*{Mission}
+
+Dans \texttt{node-paths.md} :
+
+\begin{enumerate}
+  \item expliquez la différence entre \texttt{path.normalize},
+        \texttt{path.join} et la résolution finale par Windows ;
+  \item remplissez un tableau \emph{entrée}, \emph{sortie du prédicat},
+        \emph{interprétation Windows}, \emph{hypothèse violée} pour les
+        trois cas ;
+  \item expliquez pourquoi chaque correctif est une extension du modèle, pas
+        une fermeture de la classe ;
+  \item proposez un corpus de tests qui couvre lecteurs, noms réservés,
+        UNC, chemins relatifs et séparateurs mélangés ;
+  \item classez la chaîne : \emph{architectural scatter} ou
+        \emph{incomplete-fix variant} ? Justifiez.
+\end{enumerate}
+
+Dans \texttt{path-model.js}, écrivez un petit script qui appelle uniquement
+\texttt{path.win32.normalize} et \texttt{path.win32.join} sur des chaînes
+fournies. Le script ne doit jamais appeler \texttt{fs}, \texttt{child\_process}
+ou ouvrir un fichier.
+
+\begin{warn}
+Ne testez pas ces chemins sur un vrai disque Windows. Le but est de comparer
+le modèle du prédicat au modèle du système, pas de provoquer une traversée
+de répertoire.
+\end{warn}
+
+\subsection*{Sources}
+\begin{itemize}
+  \item NVD, CVE-2025-23084 :
+        \url{https://nvd.nist.gov/vuln/detail/CVE-2025-23084}
+  \item NVD, CVE-2025-27210 :
+        \url{https://nvd.nist.gov/vuln/detail/CVE-2025-27210}
+  \item Node.js, security releases de janvier 2025 :
+        \url{https://nodejs.org/en/blog/vulnerability/january-2025-security-releases}
+  \item Node.js, security releases de juillet 2025 :
+        \url{https://nodejs.org/en/blog/vulnerability/july-2025-security-releases}
+  \item Node.js, documentation \texttt{path} :
+        \url{https://nodejs.org/api/path.html}
+  \item Microsoft, nommage des fichiers et chemins Windows :
+        \url{https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file}
+\end{itemize}
+
+\chapter{Exercise 01}
+\extitle{MINA : l'ordre des opérations}
+\turnindir{ex01}
+\exnumber{01}
+\exfiles{mina-fsm.md}
+\exauthorize{un éditeur de texte, sources Java, avis Apache}
+\makeheaderfiles
+
+Apache MINA utilise la désérialisation Java pour reconstruire des objets
+reçus du réseau. Le papier modélise ce chemin comme une machine à états :
+
+\begin{console}
+allocate -> initialize -> resolve -> check
+\end{console}
+
+Le bug n'est pas « il manque un filtre ». Le bug est que la vérification
+arrive après une transition qui a déjà exécuté du code.
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|p{0.2\linewidth}|X|X|}
+\hline
+\textbf{CVE} & \textbf{Hypothèse} & \textbf{Transition asymétrique} \\ \hline
+CVE-2024-52046 & Aucun filtre n'est nécessaire si l'application fait
+confiance au flux. & Instanciation arbitraire avant tout contrôle. \\ \hline
+CVE-2026-41409 & Une allowlist vérifiée dans
+\texttt{AbstractIoBuffer.getObject()} protège l'instanciation. & Les
+initialiseurs statiques s'exécutent avant l'évaluation de la garde. \\ \hline
+CVE-2026-42778 & Le correctif de 2.0.x est complet pour toutes les
+branches. & 2.1.x et 2.2.x reçoivent une seconde correction. \\ \hline
+\end{tabularx}
+\end{center}
+
+\subsection*{Mission}
+
+Dans \texttt{mina-fsm.md} :
+
+\begin{enumerate}
+  \item dessinez la machine à états \emph{allocate}, \emph{initialize},
+        \emph{resolve}, \emph{check} ;
+  \item placez chaque CVE sur la transition qui est mal ordonnée ;
+  \item expliquez pourquoi une allowlist de classes ne suffit pas si elle
+        est consultée trop tard ;
+  \item identifiez l'invariant qui devrait être vrai avant toute
+        initialisation ;
+  \item proposez un test de régression conceptuel, sans payload.
+\end{enumerate}
+
+\begin{warn}
+Ne construisez pas de flux Java sérialisé malveillant. Lisez le code, les
+avis et les diffs ; décrivez la transition, pas la charge utile.
+\end{warn}
+
+\subsection*{Sources}
+\begin{itemize}
+  \item NVD, CVE-2024-52046 :
+        \url{https://nvd.nist.gov/vuln/detail/CVE-2024-52046}
+  \item NVD, CVE-2026-41409 :
+        \url{https://nvd.nist.gov/vuln/detail/CVE-2026-41409}
+  \item NVD, CVE-2026-42778 :
+        \url{https://nvd.nist.gov/vuln/detail/CVE-2026-42778}
+  \item Apache MINA, annonce CVE-2024-52046 :
+        \url{https://lists.apache.org/thread/4wxktgjpggdbto15d515wdctohb0qmv8}
+  \item Apache MINA, annonce CVE-2026-41409 :
+        \url{https://lists.apache.org/thread/9ddvsq6c4l5bhwq8l14sob4f8qjvx5c9}
+  \item Apache MINA, annonce CVE-2026-42778 :
+        \url{https://lists.apache.org/thread/fhlx5k91hrkgyzh7yk1nghrn3k27gxy0}
+  \item Documentation Java sur les filtres de désérialisation :
+        \url{https://docs.oracle.com/en/java/javase/21/core/serialization-filtering1.html}
+\end{itemize}
+
+\chapter{Exercise 02}
+\extitle{MINA : la matrice des branches}
+\turnindir{ex02}
+\exnumber{02}
+\exfiles{branch-matrix.md}
+\exauthorize{un éditeur de texte, avis Apache, historique des versions}
+\makeheaderfiles
+
+Le cas MINA est un \emph{Logical Engine} réparti sur plusieurs branches de
+maintenance. Une correction peut être complète sur une branche et incomplète
+sur une autre, sans nouveau chemin de code.
+
+\subsection*{Mission}
+
+Remplissez \texttt{branch-matrix.md} avec les branches maintenues et les
+versions de correction connues :
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|p{0.18\linewidth}|p{0.18\linewidth}|p{0.2\linewidth}|X|}
+\hline
+\textbf{Branche} & \textbf{Version corrigée} & \textbf{CVE couverte} &
+\textbf{Preuve / incertitude} \\ \hline
+2.0.x & & & \\ \hline
+2.1.x & & & \\ \hline
+2.2.x & & & \\ \hline
+\end{tabularx}
+\end{center}
+
+Puis répondez :
+
+\begin{enumerate}
+  \item Pourquoi la version 2.0.28 ne prouve-t-elle pas que 2.1.11 est
+        complète ?
+  \item Quelle hypothèse de release le correctif de 2.0.x encode-t-il ?
+  \item Comment vérifier qu'une branche a réellement reçu le déplacement de
+        la garde, et pas seulement un changement de version ?
+  \item Pourquoi ce cas est-il un \emph{incomplete-fix variant} et non un
+        \emph{architectural scatter} ?
+  \item Quelle question poser à un mainteneur avant de déclarer la classe
+        fermée ?
+\end{enumerate}
+
+\subsection*{Sources}
+\begin{itemize}
+  \item Phrack, \emph{Security is failure: Every Patch Is a Guess},
+        section 13.2.
+  \item Apache MINA, avis CVE-2026-41409 et CVE-2026-42778 (mêmes liens que
+        l'exercice 01).
+  \item NVD, CVE-2026-41409 et CVE-2026-42778.
+  \item Apache MINA, page de téléchargement et d'archives :
+        \url{https://mina.apache.org/mina-project/downloads.html}
+\end{itemize}
+
+\chapter{Exercise 03}
+\extitle{FreeBSD/XNU : ce que le papier ne prouve pas}
+\turnindir{ex03}
+\exnumber{03}
+\exfiles{cross-kernel.md}
+\exauthorize{un éditeur de texte, NVD, avis FreeBSD, sources XNU}
+\makeheaderfiles
+
+La section 18.11 du papier reconnaît une limite de portée : le framework a
+été développé sur Linux, puis validé sur Windows. Les mappings FreeBSD et
+XNU sont documentés dans l'archive, pas démontrés dans le corps de
+l'article.
+
+Deux cas FreeBSD sont cités :
+
+\begin{itemize}
+  \item CVE-2026-42511 : \texttt{dhclient} ;
+  \item CVE-2026-4747 : NFS.
+\end{itemize}
+
+Le papier mentionne aussi XNU avec IOKit \texttt{IOUserClient} et Mach IPC
+comme surfaces de travail, sans en faire une étude de cas complète.
+
+\subsection*{Mission}
+
+Dans \texttt{cross-kernel.md} :
+
+\begin{enumerate}
+  \item pour chaque cas FreeBSD, identifiez le composant, la famille
+        probable et l'hypothèse que le correctif encode ;
+  \item séparez explicitement \emph{ce que le papier affirme}, \emph{ce que
+        l'avis public affirme} et \emph{ce que vous inférez} ;
+  \item pour XNU, listez deux coutures d'audit (IOKit, Mach IPC) et la
+        question de cycle de vie ou de frontière correspondante ;
+  \item expliquez pourquoi une classification cross-kernel peut être un
+        \emph{faux positif structurel} ;
+  \item concluez : le papier démontre-t-il la portée cross-kernel, ou
+        propose-t-il une hypothèse de portée ?
+\end{enumerate}
+
+\begin{warn}
+N'utilisez pas ces cas pour affirmer qu'une CVE est exploitable. Le papier
+lui-même rappelle que le framework produit des candidats, pas des
+vulnérabilités confirmées.
+\end{warn}
+
+\subsection*{Sources}
+\begin{itemize}
+  \item Guide de lecture du papier :
+        \texttt{00-guide/PAPER-GUIDE-paper/subject/PAPER-GUIDE-paper\_fr.pdf}.
+  \item NVD, CVE-2026-42511 :
+        \url{https://nvd.nist.gov/vuln/detail/CVE-2026-42511}
+  \item NVD, CVE-2026-4747 :
+        \url{https://nvd.nist.gov/vuln/detail/CVE-2026-4747}
+  \item FreeBSD, avis de sécurité :
+        \url{https://www.freebsd.org/security/advisories/}
+  \item Sources XNU :
+        \url{https://github.com/apple-oss-distributions/xnu}
+  \item Phrack, section 18.11, \emph{What the Framework Does Not Find}.
+\end{itemize}
+
+\chapter{Exercise 04}
+\extitle{Une carte exhaustive de tous les exemples du papier}
+\turnindir{ex04}
+\exnumber{04}
+\exfiles{paper-coverage.md}
+\exauthorize{un éditeur de texte, le papier, les modules, NVD}
+\makeheaderfiles
+
+Le papier contient plus d'exemples que les six CVE des études de cas
+principales. Cette carte sert à vérifier qu'aucun exemple n'a été oublié et
+à distinguer les preuves des extrapolations.
+
+\subsection*{Mission}
+
+Remplissez \texttt{paper-coverage.md} pour les CVE suivantes. Indiquez la
+section du papier, la famille, le mode de mutation et le module EPIAG qui
+la couvre.
+
+\small
+\renewcommand{\arraystretch}{0.95}
+\begin{center}
+\begin{tabularx}{\linewidth}{|p{0.18\linewidth}|p{0.1\linewidth}|p{0.18\linewidth}|X|}
+\hline
+\textbf{CVE} & \textbf{Section} & \textbf{Famille} & \textbf{Module / statut} \\ \hline
+CVE-2023-35001 & 6.2 & Predictive Oracle & M-EPI-003, A-EPI-002 \\ \hline
+CVE-2024-1086 & 6.2 & Predictive Oracle & M-EPI-003, A-EPI-002 \\ \hline
+CVE-2023-4244 & 6.3 & Logical Engine & M-EPI-000, M-EPI-003 \\ \hline
+CVE-2024-1085 & 6.3 & Logical Engine & M-EPI-000, M-EPI-003 \\ \hline
+CVE-2025-23084 & 13.1 & Predictive Oracle & A-EPI-006 \\ \hline
+CVE-2025-27210 & 13.1 & Predictive Oracle & A-EPI-006 \\ \hline
+UNC non assigné & 13.1 & Predictive Oracle & A-EPI-006 \\ \hline
+CVE-2024-52046 & 13.2 & Logical Engine & A-EPI-006 \\ \hline
+CVE-2026-41409 & 13.2 & Logical Engine & A-EPI-006 \\ \hline
+CVE-2026-42778 & 13.2 & Logical Engine & A-EPI-006 \\ \hline
+CVE-2020-27194 & 14.2 & Predictive Oracle & M-EPI-004, A-EPI-003 \\ \hline
+CVE-2021-3490 & 14.3 & Predictive Oracle & M-EPI-004, A-EPI-003 \\ \hline
+CVE-2022-23222 & 14.4 & Predictive Oracle & M-EPI-004, A-EPI-003 \\ \hline
+CVE-2023-2163 & 14.5 & Predictive Oracle & M-EPI-004, A-EPI-003 \\ \hline
+CVE-2021-20226 & 15.2 & Concurrent Proxy & M-EPI-004, A-EPI-003 \\ \hline
+CVE-2021-3491 & 15.2 & Concurrent Proxy & M-EPI-004, A-EPI-003 \\ \hline
+CVE-2023-2598 & 15.3 & Concurrent Proxy & M-EPI-004, A-EPI-003 \\ \hline
+CVE-2024-0582 & 15.3 & Concurrent Proxy & M-EPI-004, A-EPI-003 \\ \hline
+CVE-2025-33073 & 16.2 & Logical Engine & A-EPI-004 \\ \hline
+CVE-2025-58726 & 16.2 & Logical Engine & A-EPI-004 \\ \hline
+CVE-2026-24294 & 16.2 & Logical Engine & A-EPI-004 \\ \hline
+CVE-2026-26128 & 16.2 & Logical Engine & A-EPI-004 \\ \hline
+CVE-2026-26119 & 16.2 & Logical Engine & A-EPI-004 \\ \hline
+CVE-2026-42511 & 18.11 & Logical Engine ? & A-EPI-006 \\ \hline
+CVE-2026-4747 & 18.11 & Concurrent Proxy ? & A-EPI-006 \\ \hline
+\end{tabularx}
+\end{center}
+\normalsize
+
+Puis ajoutez trois paragraphes :
+
+\begin{enumerate}
+  \item \textbf{Démontré} : quels cas ont une analyse détaillée dans le
+        corps du papier ?
+  \item \textbf{Observé} : quels cas viennent du corpus de 62 CVE ou de
+        l'archive, sans analyse complète ?
+  \item \textbf{Extrapolé} : quels cas servent à revendiquer une portée
+        cross-kernel sans preuve détaillée ?
+\end{enumerate}
+
+Enfin, répondez à la question de soutenance : « Si vous deviez défendre ce
+papier, quelle serait votre affirmation la plus forte et votre concession
+la plus honnête ? »
+
+\subsection*{Sources}
+\begin{itemize}
+  \item Phrack, \emph{Security is failure: Every Patch Is a Guess},
+        sections 6, 13, 14, 15, 16 et 18.11.
+  \item Dépôt compagnon : \texttt{validation/dataset.csv} et
+        \texttt{validation/methodology.md}.
+  \item NVD : \url{https://nvd.nist.gov/}
+  \item Les modules EPIAG cités dans le tableau.
+\end{itemize}
+
+\chapter{Rendu et évaluation}
+
+\begin{console}
+A-EPI-006-warmups-cross-domain/
+|-- ex00/
+|   |-- node-paths.md
+|   +-- path-model.js
+|-- ex01/mina-fsm.md
+|-- ex02/branch-matrix.md
+|-- ex03/cross-kernel.md
++-- ex04/paper-coverage.md
+\end{console}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|l|X|c|}
+\hline
+\textbf{Critère} & \textbf{Attendu} & \textbf{Points} \\ \hline
+Node.js & Prédicat, sémantique Windows et trois angles morts & 4 \\ \hline
+MINA & Ordre des transitions et invariant explicites & 4 \\ \hline
+Branches & Matrice de versions et preuves sourcées & 4 \\ \hline
+Cross-kernel & Distinction démontré / observé / extrapolé & 4 \\ \hline
+Synthèse & Tous les exemples couverts, concession honnête & 4 \\ \hline
+\end{tabularx}
+\end{center}
+
+\chapter{Sources générales}
+\begin{itemize}
+  \item Phrack, \emph{Security is failure: Every Patch Is a Guess},
+        sections 13, 18.9 et 18.11.
+  \item Node.js, avis de sécurité 2025 et documentation \texttt{path}.
+  \item Apache MINA, avis CVE-2024-52046, CVE-2026-41409 et
+        CVE-2026-42778.
+  \item FreeBSD, avis de sécurité et NVD pour CVE-2026-42511 et
+        CVE-2026-4747.
+  \item Dépôt compagnon : \texttt{cross-kernel/}, \texttt{validation/} et
+        \texttt{rules/}.
+\end{itemize}
+
+\end{document}

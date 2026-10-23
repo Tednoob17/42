@@ -1,0 +1,152 @@
+\documentclass{training-exam}
+\schoollogo{../../../resources/latex/crack.pdf}
+\input{../../../resources/latex/epiag-preamble.tex}
+
+\begin{document}
+
+\title{Unseen Patch}
+\subtitle{Analyse d'un correctif inconnu}
+\member{Ted ``Tedsig42'' Kouhouenou}{ted.sig42@tutamail.com}
+\summary{Examen de fin de piscine. Vous recevez un correctif que vous n'avez jamais vu. Vous devez identifier sa famille, formuler son hypothèse, trouver un twin, le vérifier et le trier.}
+\examduration{3 hours}
+\examscore{20}
+\maketitle
+
+\startexam
+
+\chapter{Règles}
+
+\begin{itemize}
+  \item Durée : 3 heures. Aucun accès Internet, aucune note, aucun outil
+        d'IA.
+  \item Le correctif et les sources nécessaires sont fournis localement.
+  \item Vous pouvez utiliser \texttt{git}, \texttt{grep}, \texttt{ctags},
+        \texttt{diff} et un éditeur de texte.
+  \item Aucun exploit, aucun test sur une cible réelle.
+  \item Les réponses non justifiées ne rapportent pas de points.
+\end{itemize}
+
+\examlevel{Cadrage}
+
+On vous fournit un commit de correction, son message, et le fichier
+concerné. Sans lire le code plus de dix minutes, répondez :
+
+\begin{enumerate}
+  \item Quel est le composant ? Quelle famille principale ?
+  \item Quelle ligne du diff porte l'hypothèse ?
+  \item Quel chemin le correctif semble-t-il protéger ?
+  \item Quel chemin n'est pas mentionné dans le message de commit ?
+\end{enumerate}
+
+\exampoints{4}
+
+\examlevel{Extraction}
+
+Extrayez les lignes ajoutées et supprimées. Classez-les en trois
+catégories : test, action, commentaire.
+
+Puis répondez :
+
+\begin{enumerate}
+  \item La correction ajoute-t-elle une vérification, une initialisation,
+        ou un changement de type ?
+  \item La vérification porte-t-elle sur la valeur, l'index, la taille ou
+        l'état ?
+  \item Le correctif déplace-t-il une responsabilité d'une fonction à une
+        autre ?
+\end{enumerate}
+
+\exampoints{4}
+
+\examlevel{Twins}
+
+Trouvez au moins trois fonctions voisines qui font un travail analogue.
+Pour chacune, indiquez :
+
+\begin{enumerate}
+  \item le nom et la ligne ;
+  \item l'invariant partagé ;
+  \item le test présent ou absent ;
+  \item le statut : candidat sérieux, faux positif, ou à vérifier.
+\end{enumerate}
+
+Vous devez fournir les commandes \texttt{ctags} et \texttt{grep} utilisées.
+
+\exampoints{5}
+
+\examlevel{Vérification}
+
+Choisissez le candidat le plus sérieux. Expliquez :
+
+\begin{enumerate}
+  \item pourquoi il partage réellement l'hypothèse du correctif ;
+  \item pourquoi il n'est pas protégé par un autre invariant ;
+  \item quel test permettrait de confirmer ou d'infirmer le candidat sans
+        exploit ;
+  \item quel serait l'impact si l'hypothèse était fausse.
+\end{enumerate}
+
+\exampoints{4}
+
+\examlevel{Triage et conclusion}
+
+Donnez un score de triage au candidat selon la grille :
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|l|X|c|}
+\hline
+\textbf{Critère} & \textbf{Question} & \textbf{Points} \\ \hline
+Confiance & Le correctif est-il réellement lié au candidat ? & 0--3 \\ \hline
+Proximité & Même chemin ou twin direct ? & 0--3 \\ \hline
+Impact & Que se passe-t-il si l'hypothèse est fausse ? & 0--2 \\ \hline
+Testabilit\'e & Vérifiable sans exploit ? & 0--2 \\ \hline
+\end{tabularx}
+\end{center}
+
+Concluez en dix lignes : \emph{ignorer}, \emph{investiguer}, ou
+\emph{prioriser}. Justifiez.
+
+\exampoints{3}
+
+\chapter{Rendu}
+
+Un seul fichier \texttt{exam.md} par étudiant, avec les sections suivantes :
+
+\begin{console}
+# Cadrage
+# Extraction
+# Twins
+# Verification
+# Triage
+# Sources
+\end{console}
+
+\chapter{Ressources de révision}
+
+\begin{itemize}
+  \item Papier, sections 3, 4 et 18.3 : famille, hypothèse, twins.
+  \item Dépôt compagnon : \texttt{rules/TRIAGE.md},
+        \texttt{validation/methodology.md}.
+  \item Universal Ctags : \url{https://docs.ctags.io/}
+  \item NVD : \url{https://nvd.nist.gov/}
+  \item À réviser : \texttt{git show}, \texttt{grep '\string^+'},
+        \texttt{ctags -R}, \texttt{nft\_is\_active\_next}, \texttt{regsafe},
+        \texttt{fdget}.
+\end{itemize}
+
+\chapter{Barème}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|l|c|}
+\hline
+\textbf{Partie} & \textbf{Points} \\ \hline
+Cadrage & 4 \\ \hline
+Extraction & 4 \\ \hline
+Twins & 5 \\ \hline
+Vérification & 4 \\ \hline
+Triage et conclusion & 3 \\ \hline
+& \textbf{20} \\ \hline
+\end{tabularx}
+\end{center}
+
+\end{document}

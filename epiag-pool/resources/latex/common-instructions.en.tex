@@ -1,0 +1,188 @@
+\chapter{Common Instructions}
+
+\section{Repository Structure}
+
+Your Git repository must follow the naming convention below for
+all module submissions. The evaluator's tooling (\texttt{pendragon})
+relies on this structure to locate and test your work.
+
+\begin{console}
+<login>/
++-- <MODULE-ID>-<slug>/         # e.g. M-BLS-001-business-logic/
+|   +-- <turnindir>/            # e.g. ex00-pricing-manipulation/
+|   |   +-- <file1>             # e.g. poc-pricing.py
+|   |   +-- <file2>             # e.g. report.md
+|   |   +-- ...
+|   +-- <turnindir>/            # e.g. ex01-race-conditions/
+|   |   +-- ...
+|   +-- ...
++-- ...
+\end{console}
+
+\begin{itemize}
+  \item \textbf{Module directory}: the full directory name as shown in your
+        curriculum (e.g. \texttt{M-BLS-001-business-logic}).
+  \item \textbf{Turn-in directory}: the value of \texttt{\textbackslash turnindir}
+        given in each exercise (e.g. \texttt{ex00-pricing-manipulation}).
+  \item \textbf{Exercise files}: exactly the files listed in
+        \texttt{\textbackslash exfiles}. No extra files, no missing files.
+\end{itemize}
+
+\section{What Constitutes a Valid Proof of Concept}
+
+A PoC must be:
+
+\begin{enumerate}
+  \item \textbf{Reproducible}. Anyone with the same environment can run it
+        and observe the vulnerability. Hard-coded paths, absolute IPs, and
+        expired tokens are not acceptable.
+  \item \textbf{Documented}. Every step is explained. The evaluator should
+        not need to guess what the script does.
+  \item \textbf{Targeted}. The exercise specifies an authorized target
+        (lab, mock, local binary, or designated platform). Never test PoCs
+        on production systems you do not own.
+  \item \textbf{Minimal}. The PoC demonstrates \emph{only} the vulnerability
+        in question. Unrelated payloads and noise are penalized.
+\end{enumerate}
+
+\begin{warning}
+  A PoC that silently modifies system state, deletes files, or
+  persists changes outside the exercise scope will be rejected.
+  If your exploit requires cleanup, document the cleanup steps
+  in your report.
+\end{warning}
+
+\section{Submission Workflow}
+
+\begin{enumerate}
+  \item Complete the exercise deliverables on your local machine.
+  \item Commit and push to your assigned Git repository.
+  \item The repository is frozen after the deadline.
+  \item Peers clone your repository and evaluate using:
+        \begin{itemize}
+          \item \texttt{pendragon} for automated test execution
+                (where the module supplies mouli configs).
+          \item Manual rubric for report quality, code style, and
+                methodology.
+        \end{itemize}
+\end{enumerate}
+
+\hint{Always run \texttt{pendragon run <MODULE-ID> <ex\_id>
+<path/to/student/repo>} before your final commit to verify
+your submission passes the automated checks.}
+
+\subsection*{Testing with pendragon}
+
+If the module includes mouli configuration (JSON files in
+\texttt{resources/mouli/}), you can test your submission locally:
+
+\begin{console}
+pendragon run M-BLS-001 ex00 ~/student-repos/tedsig42
+\end{console}
+
+\texttt{pendragon} resolves the exercise path automatically by
+searching for \texttt{<mod-fullname>/<ex-dirname>/} under the
+given student directory.
+
+\subsection*{Style Checking with caliban}
+
+For modules that require C code, \texttt{caliban} checks style
+conformance:
+
+\begin{console}
+caliban check ~/student-repos/tedsig42/M-BLS-001-business-logic
+\end{console}
+
+\texttt{caliban} enforces the 42 Norm (function length, variable
+naming, forbidden constructs) adapted for vulnerability research
+contexts. Run it before submission --- failing style checks may
+invalidate the exercise.
+
+\section{No Extra Files Rule}
+
+\begin{itemize}
+  \item Your repository must contain \textbf{only} the files listed in
+        \texttt{\textbackslash exfiles} for each exercise.
+  \item Prohibited files: \texttt{.DS\_Store}, \texttt{\_\_pycache\_\_},
+        \texttt{.venv/}, \texttt{node\_modules/}, \texttt{.git/},
+        compiled binaries (unless explicitly listed in \texttt{exfiles}),
+        editor swap files, log files, and any file not requested.
+  \item Use \texttt{.gitignore} to exclude unwanted files automatically.
+\end{itemize}
+
+\section{Report Format}
+
+When a report (\texttt{report.md}) is required, it must include:
+
+\begin{enumerate}
+  \item \textbf{Vulnerability class} (CWE identifier if applicable).
+  \item \textbf{Reproduction steps} --- numbered, copy-paste ready.
+  \item \textbf{Payloads} --- exact strings, requests, or inputs used.
+  \item \textbf{Impact} --- what an attacker can achieve.
+  \item \textbf{Mitigation} --- how the developer should fix it.
+  \item \textbf{Sources} --- every resource consulted (see
+        Section~\ref{sec:cite-sources}).
+\end{enumerate}
+
+\subsection*{Deliverable Header}
+
+Every source file must include the deliverable header defined in
+\path{../../../resources/latex/deliverable-header.en.tex}, adapted
+to the language's comment syntax.
+
+\section{Authorized Targets Only}
+
+\begin{warning}
+  You may \textbf{only} test against targets explicitly listed in
+  the exercise (labs, local servers, mocks, designated binaries).
+  Testing against real production systems, third-party applications,
+  or any target you do not own or have written permission to test
+  is prohibited and may result in immediate disqualification.
+\end{warning}
+
+Bug bounty ethics apply throughout this curriculum:
+\begin{itemize}
+  \item No testing on live programs without a valid scope agreement.
+  \item No denial of service unless the exercise explicitly requires it.
+  \item No data exfiltration beyond what is necessary to demonstrate
+        the vulnerability.
+  \item If you accidentally access real user data, stop immediately
+        and document what happened.
+\end{itemize}
+
+\section{Cite All Sources}
+\label{sec:cite-sources}
+
+Any resource consulted during your work must be cited. This includes:
+
+\begin{itemize}
+  \item Academic papers and blog posts.
+  \item Public bug bounty reports (HackerOne, Bugcrowd, etc.).
+  \item Official documentation (RFCs, man pages, vendor docs).
+  \item \textbf{AI tools}: model name, prompt summary, date, and
+        verification method (see the AI Instructions chapter for
+        the exact citation format).
+  \item Code snippets adapted from open-source projects (with
+        license attribution if required).
+\end{itemize}
+
+\subsection*{Citation format}
+
+\begin{minted}{markdown}
+# References
+
+- [1] PortSwigger, "Business Logic Flaws",
+  https://portswigger.net/web-security/logic-flaws
+  (accessed 2025-03-15).
+- [2] HackerOne Report #123456, "IDOR on /api/users",
+  anonymized, accessed via public disclosure.
+- [3] Generated with assistance from Claude 3.5 Sonnet
+  on 2025-03-14. Prompt: "Write a Python script that...".
+  Verified by: manual review of each HTTP request.
+\end{minted}
+
+\subsection*{Inline attribution}
+
+If an exercise explicitly asks you to use a specific technique or
+tool, you do not need to cite the exercise itself as a source.
+Cite everything outside the exercise statement.

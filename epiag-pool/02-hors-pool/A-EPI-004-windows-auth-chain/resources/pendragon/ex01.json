@@ -1,0 +1,21 @@
+{
+  "exercise": "A-EPI-004-windows-auth-chain/ex01",
+  "title": "CVE-2025-33073 : réflexion NTLM",
+  "difficulty": "hard",
+  "points": 5,
+  "timeout": 30,
+  "tests": [
+    {
+      "name": "File exists: ex01/cve-2025-33073.md",
+      "type": "file_exists",
+      "file": "ex01/cve-2025-33073.md"
+    },
+    {
+      "name": "ex01/cve-2025-33073.md has minimum length",
+      "type": "custom",
+      "command": "f=\"ex01/cve-2025-33073.md\"; [ -s \"$f\" ] || exit 1; [ \"$(wc -c < \"$f\")\" -gt 120 ] || exit 1; echo OK",
+      "expected_exit": 0,
+      "timeout": 10
+    }
+  ]
+}

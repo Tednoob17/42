@@ -1,0 +1,379 @@
+\documentclass{training}
+\schoollogo{../../../resources/latex/crack.pdf}
+\input{../../../resources/latex/epiag-preamble.tex}
+
+\begin{document}
+
+\title{Windows : réflexion et frontières --- A-EPI-004}
+\subtitle{Réflexion, frontières et correctifs incomplets}
+\member{Ted ``Tedsig42'' Kouhouenou}{ted.sig42@tutamail.com}
+\summary{Module avancé : modéliser la chaîne d'authentification Windows comme une machine à états, puis analyser une famille de CVE récentes qui partagent une racine de réflexion, de contournement de frontière ou de chargement privilégié. Le laboratoire est un AD simulé, jamais une cible réelle.}
+\version{1.0}
+\prerequisite{A-EPI-001, bases d'Active Directory, NTLM, Kerberos, SMB}
+\maketitle
+
+\newpage
+\tableofcontents
+\newpage
+
+\chapter{Instructions}
+\begin{itemize}
+  \item Trois jours.
+  \item Aucun test sur un domaine de production ou un domaine tiers.
+  \item Le laboratoire est un environnement Active Directory simulé,
+        isolé, avec des comptes jetables.
+  \item Aucune coercition d'authentification, aucun relais réel, aucun
+        outil offensif contre une cible non autorisée.
+  \item Les CVE de 2026 doivent être traitées comme des cas d'étude :
+        vérifiez chaque affirmation dans les avis publics.
+  \item Dark Elevator et CVE-2026-66804 sont des cas de logique et de
+        correctif incomplet : aucune reproduction d'exploit n'est demandée.
+\end{itemize}
+
+\input{../../../resources/latex/deliverable-header.tex}
+\input{../../../resources/latex/common-instructions.fr.tex}
+\input{../../../resources/latex/ai-instructions.fr.tex}
+
+\chapter{Avant-propos}
+
+La chaîne d'authentification Windows n'est pas un seul composant. C'est une
+machine à états répartie entre le client, le serveur, le contrôleur de
+domaine et les services qui acceptent des tickets ou des jetons.
+
+Une \emph{réflexion} apparaît quand une authentification destinée à une
+frontière de confiance est réutilisée sur une autre frontière. Un
+\emph{contournement de frontière} apparaît quand un composant accepte une
+preuve qui n'a pas été produite pour lui.
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|p{0.22\linewidth}|X|}
+\hline
+\textbf{Étape} & \textbf{Question d'audit} \\ \hline
+Preuve & Qui a produit cette preuve, pour quelle cible, et pour quelle
+durée ? \\ \hline
+Transport & La preuve est-elle liée au canal ou au service qui la reçoit ? \\ \hline
+Validation & Le vérificateur applique-t-il la même règle que l'émetteur ? \\ \hline
+Translation & La preuve est-elle transformée en un autre type de jeton
+sans perte de contexte ? \\ \hline
+\end{tabularx}
+\end{center}
+
+\begin{warn}
+Les CVE de 2026 évoluent. Ne reprenez pas un chiffre ou un mécanisme sans
+citer l'avis officiel. Le but du module est la méthode, pas la mémorisation
+d'un exploit.
+\end{warn}
+
+\chapter{Aperçu du module}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|c|l|c|c|}
+\hline
+\textbf{Ex} & \textbf{Titre} & \textbf{Difficulté} & \textbf{Points} \\ \hline
+00 & Carte de la machine à états & Moyen & 4 \\
+01 & CVE-2025-33073 : réflexion NTLM & Difficile & 5 \\
+02 & CVE-2025-58726 : Ghost SPNs & Difficile & 4 \\
+03 & 2026 : chaîne et correctif incomplet & Difficile & 5 \\
+04 & Laboratoire et détection & Moyen & 4 \\ \hline
+& \textbf{Total} & & \textbf{22} \\ \hline
+\end{tabularx}
+\end{center}
+
+\startexercices
+
+\chapter{Exercise 00}
+\extitle{Carte de la machine à états}
+\turnindir{ex00}
+\exnumber{00}
+\exfiles{fsm.md}
+\exauthorize{un éditeur de texte, documentation Microsoft}
+\makeheaderfiles
+
+Dans \texttt{fsm.md}, modélisez une authentification NTLM/Kerberos
+simplifiée :
+
+\begin{enumerate}
+  \item les acteurs : client, serveur, KDC, service ;
+  \item les messages échangés ;
+  \item les preuves produites et leur cible ;
+  \item les transitions d'état ;
+  \item les points où une preuve est traduite ou réutilisée.
+\end{enumerate}
+
+Ajoutez trois colonnes : \emph{qui émet}, \emph{qui vérifie}, \emph{quelle
+frontière est franchie}.
+
+\hint{Une machine à états d'authentification est un Logical Engine : le bug
+apparaît souvent dans une transition d'erreur ou de repli, pas dans le
+chemin nominal.}
+
+\chapter{Exercise 01}
+\extitle{CVE-2025-33073 : réflexion NTLM}
+\turnindir{ex01}
+\exnumber{01}
+\exfiles{cve-2025-33073.md}
+\exauthorize{un éditeur de texte, NVD, avis Synacktiv}
+\makeheaderfiles
+
+CVE-2025-33073 est décrite comme une élévation de privilèges dans le client
+SMB Windows, liée à une réflexion d'authentification NTLM. Le cas est
+intéressant parce que la preuve est valide, mais elle est utilisée sur une
+mauvaise frontière.
+
+\subsection*{Mission}
+
+Dans \texttt{cve-2025-33073.md} :
+
+\begin{enumerate}
+  \item décrivez le chemin de réflexion sans fournir de commande
+        d'exploitation ;
+  \item expliquez pourquoi le serveur accepte une preuve produite pour le
+        client ;
+  \item identifiez l'hypothèse de liaison au canal qui manque ;
+  \item proposez une détection défensive (journal, événement, indicateur) ;
+  \item expliquez pourquoi un correctif local sur un seul composant peut
+        être insuffisant.
+\end{enumerate}
+
+\subsection*{Sources}
+\begin{itemize}
+  \item NVD : \url{https://nvd.nist.gov/vuln/detail/CVE-2025-33073}
+  \item Synacktiv, analyse de CVE-2025-33073.
+  \item Documentation Microsoft sur la liaison de canal NTLM.
+\end{itemize}
+
+\chapter{Exercise 02}
+\extitle{CVE-2025-58726 : Ghost SPNs}
+\turnindir{ex02}
+\exnumber{02}
+\exfiles{cve-2025-58726.md}
+\exauthorize{un éditeur de texte, NVD, avis Semperis}
+\makeheaderfiles
+
+CVE-2025-58726 est associée à des « Ghost SPNs » et à une confusion de
+service dans l'authentification Windows. Le mécanisme exact doit être
+vérifié dans les avis publics.
+
+\subsection*{Mission}
+
+Dans \texttt{cve-2025-58726.md} :
+
+\begin{enumerate}
+  \item définissez ce qu'est un SPN et comment il est utilisé pour choisir
+        un service ;
+  \item expliquez le risque d'un SPN fantôme ou mal enregistré ;
+  \item reliez le cas à la question de frontière de confiance ;
+  \item proposez un contrôle de configuration qui réduit l'exposition ;
+  \item listez les affirmations que vous n'avez pas pu vérifier.
+\end{enumerate}
+
+\subsection*{Sources}
+\begin{itemize}
+  \item NVD : \url{https://nvd.nist.gov/vuln/detail/CVE-2025-58726}
+  \item Semperis, analyse des Ghost SPNs.
+\end{itemize}
+
+\chapter{Exercise 03}
+\extitle{2026 : chaîne et correctif incomplet}
+\turnindir{ex03}
+\exnumber{03}
+\exfiles{chain.md}
+\exauthorize{un éditeur de texte, NVD, avis éditeurs}
+\makeheaderfiles
+
+Étudiez quatre CVE de 2026 :
+
+\begin{itemize}
+  \item CVE-2026-24294 : port SMB arbitraire ;
+  \item CVE-2026-26128 : homoglyph DNS ;
+  \item CVE-2026-26119 : contournement EPA dans Windows Admin Center ;
+  \item CVE-2026-50343 : Dark Elevator, chargement d'une DLL plantable
+        par \texttt{InstallService}.
+\end{itemize}
+
+Dark Elevator combine deux défauts logiques : une carte de plugins
+inscriptible par un utilisateur normal, et une classe COM Windows dont la
+DLL in-process est enregistrée sous \texttt{\%PROGRAMDATA\%}, donc
+plantable. Le service SYSTEM charge la DLL dans son propre processus. Le
+suivi Project Zero, CVE-2026-66804, montre que le correctif de
+\texttt{InstallService} laisse l'enregistrement COM orphelin.
+
+\subsection*{Mission}
+
+Dans \texttt{chain.md}, remplissez un tableau :
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|p{0.2\linewidth}|X|X|}
+\hline
+\textbf{CVE} & \textbf{Hypothèse du correctif} & \textbf{Frontière contournée} \\ \hline
+CVE-2026-24294 & & \\ \hline
+CVE-2026-26128 & & \\ \hline
+CVE-2026-26119 & & \\ \hline
+CVE-2026-50343 & & \\ \hline
+\end{tabularx}
+\end{center}
+
+Puis répondez :
+
+\begin{enumerate}
+  \item Ces quatre cas sont-ils des variantes d'une même racine, ou des
+        bugs indépendants qui partagent un thème ?
+  \item Quel contrôle défensif couvre plusieurs cas à la fois ?
+  \item Pourquoi la validation d'un nom ou d'un port ne suffit-elle pas à
+        garantir la frontière ?
+  \item Pourquoi le correctif de \texttt{InstallService} ne ferme-t-il pas
+        l'enregistrement COM orphelin de CVE-2026-66804 ?
+  \item Classez CVE-2026-66804 : \emph{incomplete-fix variant} ou
+        \emph{architectural scatter} ? Justifiez avec la définition du
+        papier.
+  \item Proposez trois contrôles défensifs : ACL de la carte de plugins,
+        inventaire des enregistrements COM, surveillance des DLL créées
+        sous \texttt{ProgramData}.
+\end{enumerate}
+
+\begin{warn}
+Le suivi Project Zero montre qu'un correctif peut fermer le chemin
+d'activation sans supprimer la ressource dangereuse. Ne reproduisez pas la
+chaîne de chargement ; travaillez sur la carte des frontières et les
+contrôles de configuration.
+\end{warn}
+
+\chapter{Exercise 04}
+\extitle{Laboratoire et détection}
+\turnindir{ex04}
+\exnumber{04}
+\exfiles{lab.md}
+\exauthorize{un éditeur de texte, documentation AD, outils de journalisation}
+\makeheaderfiles
+
+Concevez un laboratoire défensif, pas un terrain d'attaque :
+
+\begin{enumerate}
+  \item un domaine AD simulé avec des comptes jetables ;
+  \item un serveur SMB isolé ;
+  \item un client Windows dans un réseau séparé ;
+  \item des journaux centralisés ;
+  \item des règles de détection pour les réflexions et les SPN suspects.
+\end{enumerate}
+
+Dans \texttt{lab.md}, décrivez :
+
+\begin{itemize}
+  \item le schéma réseau et les frontières ;
+  \item les événements à collecter ;
+  \item trois requêtes de détection ;
+  \item les faux positifs attendus ;
+  \item les critères d'arrêt du laboratoire.
+\end{itemize}
+
+\begin{warn}
+Ne testez jamais ces techniques sur un domaine qui ne vous appartient pas.
+Une preuve d'autorisation écrite est obligatoire avant toute manipulation.
+\end{warn}
+
+\chapter{Rendu et évaluation}
+
+\begin{console}
+A-EPI-004-windows-auth-chain/
+|-- ex00/fsm.md
+|-- ex01/cve-2025-33073.md
+|-- ex02/cve-2025-58726.md
+|-- ex03/chain.md
++-- ex04/lab.md
+\end{console}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|l|X|c|}
+\hline
+\textbf{Critère} & \textbf{Attendu} & \textbf{Points} \\ \hline
+FSM & Acteurs, preuves et frontières explicites & 5 \\ \hline
+Réflexion & Mécanisme et liaison de canal & 5 \\ \hline
+SPN & Rôle du SPN et contrôle défensif & 4 \\ \hline
+Chaîne 2026 & Dark Elevator, correctif incomplet, sources & 4 \\ \hline
+Laboratoire & Isolé, détections et critères d'arrêt & 4 \\ \hline
+\end{tabularx}
+\end{center}
+
+\chapter{Ressources par exercice}
+
+\subsection*{Exercice 00 --- Carte de la machine à états}
+\begin{itemize}
+  \item Microsoft, NTLM :
+        \url{https://learn.microsoft.com/en-us/windows-server/security/kerberos/ntlm-overview}
+  \item Microsoft, Kerberos :
+        \url{https://learn.microsoft.com/en-us/windows-server/security/kerberos/kerberos-authentication-overview}
+  \item Microsoft, SMB :
+        \url{https://learn.microsoft.com/en-us/windows-server/storage/file-server/file-server-smb-overview}
+  \item Papier, section 16.1.
+  \item À chercher : \texttt{NEGOTIATE}, \texttt{CHALLENGE},
+        \texttt{AUTHENTICATE}, \texttt{AS-REQ}, \texttt{TGS-REQ}.
+\end{itemize}
+
+\subsection*{Exercice 01 --- CVE-2025-33073}
+\begin{itemize}
+  \item NVD : \url{https://nvd.nist.gov/vuln/detail/CVE-2025-33073}
+  \item MSRC :
+        \url{https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-33073}
+  \item Synacktiv, analyse NTLM reflection :
+        \url{https://www.synacktiv.com/sites/default/files/2026-05/bypassing_authentication_reflections_mitigations_for_system_shells.pdf}
+  \item Papier, section 16.2.
+  \item À chercher : \texttt{mrxsmb.sys}, \texttt{CMTI}, \texttt{SPN},
+        \texttt{channel binding}, \texttt{loopback check}.
+\end{itemize}
+
+\subsection*{Exercice 02 --- CVE-2025-58726}
+\begin{itemize}
+  \item NVD : \url{https://nvd.nist.gov/vuln/detail/CVE-2025-58726}
+  \item MSRC :
+        \url{https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-58726}
+  \item Semperis, Ghost SPNs :
+        \url{https://www.semperis.com/blog/exploiting-ghost-spns-and-kerberos-reflection}
+  \item À chercher : \texttt{Ghost SPN}, \texttt{service account},
+        \texttt{KDC}, \texttt{ticket}.
+\end{itemize}
+
+\subsection*{Exercice 03 --- Chaîne 2026 et correctif incomplet}
+\begin{itemize}
+  \item NVD : CVE-2026-24294, CVE-2026-26128, CVE-2026-26119,
+        CVE-2026-50343, CVE-2026-66804.
+  \item MSRC :
+        \url{https://msrc.microsoft.com/update-guide/}
+  \item Calif, Dark Elevator :
+        \url{https://blog.calif.io/p/dark-elevator-windows-install-service}
+  \item Project Zero, dangling COM :
+        \url{https://projectzero.google/2026/09/windows-dangling-com.html}
+  \item Synacktiv, PDF auth reflections (même lien que l'exercice 01).
+  \item À chercher : \texttt{InstallService}, \texttt{StaticPluginMap},
+        \texttt{CrossDevice}, \texttt{ProgramData}, \texttt{COM orphan}.
+\end{itemize}
+
+\subsection*{Exercice 04 --- Laboratoire et détection}
+\begin{itemize}
+  \item Microsoft, AD DS :
+        \url{https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/active-directory-domain-services}
+  \item Microsoft, audit events :
+        \url{https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/advanced-security-audit-policy}
+  \item Papier, sections 16.2 et 16.3.
+  \item À chercher : \texttt{event 4624}, \texttt{event 4768},
+        \texttt{event 4769}, \texttt{SPN}, \texttt{loopback}.
+\end{itemize}
+
+\chapter{Sources}
+\begin{itemize}
+  \item Phrack, \emph{Security is failure: Every Patch Is a Guess},
+        sections 9 et 10.
+  \item NVD : CVE-2025-33073, CVE-2025-58726, CVE-2026-24294,
+        CVE-2026-26128, CVE-2026-26119, CVE-2026-50343,
+        CVE-2026-66804.
+  \item Calif, \emph{Dark Elevator: Windows Install Service Local Privilege
+        Escalation} :
+        \url{https://blog.calif.io/p/dark-elevator-windows-install-service}
+  \item Project Zero, \emph{Dangling COM Object Registrations} :
+        \url{https://projectzero.google/2026/09/windows-dangling-com.html}
+  \item Synacktiv, \emph{The Gift That Keeps on Giving} :
+        \url{https://www.synacktiv.com/sites/default/files/2026-05/bypassing_authentication_reflections_mitigations_for_system_shells.pdf}
+  \item Documentation Microsoft sur NTLM, Kerberos, SMB, EPA et COM.
+  \item Analyses Semperis.
+\end{itemize}
+
+\end{document}

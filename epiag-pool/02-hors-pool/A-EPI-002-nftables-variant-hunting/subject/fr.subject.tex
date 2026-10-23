@@ -1,0 +1,328 @@
+\documentclass{training}
+\schoollogo{../../../resources/latex/crack.pdf}
+\input{../../../resources/latex/epiag-preamble.tex}
+
+\begin{document}
+
+\title{nf\_tables : chasse aux variantes --- A-EPI-002}
+\subtitle{Générations, catchall, GC}
+\member{Ted ``Tedsig42'' Kouhouenou}{ted.sig42@tutamail.com}
+\summary{Module avancé : modéliser les transactions nf\_tables, traquer les variantes de quatre CVE, écrire des règles Semgrep/Weggli pour les motifs de génération et trier les résultats sur les sources du noyau.}
+\version{1.0}
+\prerequisite{A-EPI-001, lecture de C noyau, notions de RCU et de GC}
+\maketitle
+
+\newpage
+\tableofcontents
+\newpage
+
+\chapter{Instructions}
+\begin{itemize}
+  \item Deux à trois jours.
+  \item Travail sur une copie locale du noyau, jamais sur une cible de
+        production.
+  \item Les règles doivent être testées sur un petit corpus, pas lancées
+        sur tout le noyau sans filtre.
+  \item Aucun exploit, aucun module noyau chargeable sur une machine
+        partagée.
+\end{itemize}
+
+\input{../../../resources/latex/deliverable-header.tex}
+\input{../../../resources/latex/common-instructions.fr.tex}
+\input{../../../resources/latex/ai-instructions.fr.tex}
+
+\chapter{Avant-propos}
+
+nf\_tables est un terrain de chasse idéal pour les variantes parce que le
+même objet logique est manipulé par plusieurs chemins :
+
+\begin{itemize}
+  \item le chemin de transaction, qui prépare l'état futur ;
+  \item le chemin de commit, qui rend l'état visible ;
+  \item le chemin d'abort, qui défait une transaction ;
+  \item le chemin de GC, qui libère les objets après un délai de grâce.
+\end{itemize}
+
+Une variante naît quand un de ces chemins utilise une règle de validité qui
+appartient à un autre. La question centrale est donc :
+
+\begin{quote}
+« Cette fonction vérifie-t-elle l'état courant ou l'état suivant, et
+pourquoi ? »
+\end{quote}
+
+\chapter{Aperçu du module}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|c|l|c|c|}
+\hline
+\textbf{Ex} & \textbf{Titre} & \textbf{Difficulté} & \textbf{Points} \\ \hline
+00 & Modèle de transaction et de génération & Facile & 3 \\
+01 & Variantes de CVE-2023-35001 & Moyen & 5 \\
+02 & Catchall, GC et double-free pipapo & Difficile & 5 \\
+03 & Écrire les règles & Difficile & 5 \\
+04 & Lancer et trier & Moyen & 4 \\ \hline
+& \textbf{Total} & & \textbf{22} \\ \hline
+\end{tabularx}
+\end{center}
+
+\startexercices
+
+\chapter{Exercise 00}
+\extitle{Modèle de transaction et de génération}
+\turnindir{ex00}
+\exnumber{00}
+\exfiles{model.md}
+\exauthorize{grep, ctags, un éditeur de texte}
+\makeheaderfiles
+
+Dans \texttt{model.md}, construisez un modèle exécutable mental de
+nf\_tables :
+
+\begin{enumerate}
+  \item les objets d'une transaction ;
+  \item les générations et le \texttt{genmask} ;
+  \item la différence entre \texttt{nft\_is\_active()} et
+        \texttt{nft\_is\_active\_next()} ;
+  \item le moment où un objet devient visible ;
+  \item le moment où un objet peut être libéré.
+\end{enumerate}
+
+Ajoutez un tableau « qui voit quoi » avec trois colonnes : transaction en
+cours, commit, GC.
+
+\hint{Un objet peut être actif dans la génération courante et inactif dans
+la génération suivante. C'est cette asymétrie qui rend les tests de
+génération difficiles à relire.}
+
+\chapter{Exercise 01}
+\extitle{Variantes de CVE-2023-35001}
+\turnindir{ex01}
+\exnumber{01}
+\exfiles{nft-byteorder.md}
+\exauthorize{git, grep, ctags, un éditeur de texte}
+\makeheaderfiles
+
+Le correctif de CVE-2023-35001 contraint un accès dans
+\texttt{nft\_byteorder\_eval()}. Cherchez les autres opérations qui lisent
+ou écrivent des registres avec une hypothèse de taille ou d'index.
+
+\subsection*{Mission}
+
+Dans \texttt{nft-byteorder.md} :
+
+\begin{enumerate}
+  \item listez au moins cinq opérations voisines ;
+  \item pour chacune, indiquez le type de registre, la taille lue et la
+        borne appliquée ;
+  \item identifiez celles qui partagent l'hypothèse du correctif ;
+  \item proposez un test de validation qui ne nécessite pas d'exploit ;
+  \item donnez un statut et un score de triage à chaque candidate.
+\end{enumerate}
+
+\chapter{Exercise 02}
+\extitle{Catchall, GC et double-free pipapo}
+\turnindir{ex02}
+\exnumber{02}
+\exfiles{gc-catchall.md}
+\exauthorize{git, grep, un éditeur de texte}
+\makeheaderfiles
+
+Le correctif de CVE-2024-1085 remplace :
+
+\begin{console}
+- if (!nft_is_active(net, ext))
++ if (!nft_is_active_next(net, ext))
+      continue;
+\end{console}
+
+dans \texttt{nft\_setelem\_catchall\_deactivate()}.
+
+\subsection*{Mission}
+
+Dans \texttt{gc-catchall.md} :
+
+\begin{enumerate}
+  \item expliquez pourquoi le test doit porter sur la génération suivante
+        dans ce chemin ;
+  \item décrivez la conséquence d'un \texttt{kfree()} sur un élément encore
+        actif ;
+  \item reliez ce correctif à CVE-2023-4244 et à la suppression de la
+        marque « busy » ;
+  \item cherchez trois autres fonctions qui appellent
+        \texttt{nft\_is\_active()} sans tester \texttt{\_next} ;
+  \item pour chacune, dites si le test courant est correct ou suspect.
+\end{enumerate}
+
+\subsection*{Variante 2024 : CVE-2024-26809}
+
+Le double-free pipapo de CVE-2024-26809 est un second cas de durée de vie.
+Il ne faut pas le confondre avec CVE-2024-1085 : le premier touche la
+destruction d'un set pipapo, le second la désactivation d'un élément
+catchall.
+
+Dans \texttt{gc-catchall.md}, ajoutez une section qui répond à :
+
+\begin{enumerate}
+  \item pourquoi \texttt{priv->dirty} et \texttt{priv->clone} peuvent
+        provoquer une double libération ;
+  \item pourquoi \texttt{set->dead} rend le chemin de destruction
+        atteignable ;
+  \item quel commit a introduit le code fautif, et quel commit a introduit
+        le drapeau qui le rend exploitable ;
+  \item pourquoi ce cas est une interaction entre deux hypothèses, et non
+        une simple copie du correctif de CVE-2024-1085.
+\end{enumerate}
+
+\begin{warn}
+Le chemin GC est souvent exécuté de manière asynchrone. Une lecture de code
+linéaire peut donner l'illusion d'une exclusion mutuelle qui n'existe pas.
+Ne reproduisez pas le double-free : l'exercice porte sur l'archéologie du
+patch et sur la propriété des objets.
+\end{warn}
+
+\chapter{Exercise 03}
+\extitle{Écrire les règles}
+\turnindir{ex03}
+\exnumber{03}
+\exfiles{rules/}
+\exauthorize{Semgrep, Weggli, un éditeur de texte}
+\makeheaderfiles
+
+Écrivez au moins trois règles :
+
+\begin{enumerate}
+  \item une règle Semgrep qui repère un appel à
+        \texttt{nft\_is\_active()} dans une fonction dont le nom contient
+        \texttt{deactivate} ou \texttt{destroy} ;
+  \item une règle Weggli qui repère un \texttt{kfree()} proche d'un test
+        d'activité ;
+  \item une règle qui repère une fonction de désactivation sans test de
+        génération.
+\end{enumerate}
+
+Chaque règle doit avoir :
+
+\begin{itemize}
+  \item un identifiant lisible ;
+  \item un message qui explique \emph{pourquoi} le motif est suspect ;
+  \item un exemple positif et un exemple négatif dans
+        \texttt{rules/tests/}.
+\end{itemize}
+
+\chapter{Exercise 04}
+\extitle{Lancer et trier}
+\turnindir{ex04}
+\exnumber{04}
+\exfiles{findings.md}
+\exauthorize{Semgrep, Weggli, un éditeur de texte}
+\makeheaderfiles
+
+Lancez vos règles sur \texttt{net/netfilter/} uniquement. Produisez
+\texttt{findings.md} avec :
+
+\begin{enumerate}
+  \item le nombre de résultats bruts ;
+  \item le nombre de résultats après déduplication ;
+  \item cinq résultats triés, avec fichier, ligne et justification ;
+  \item les faux positifs les plus instructifs ;
+  \item une conclusion sur la précision de vos règles ;
+  \item une comparaison avec le patch gap OtterRoot : commit public,
+        publication de l'exploit KernelCTF, puis arrivée dans Ubuntu et
+        Debian.
+\end{enumerate}
+
+Rappel de triage : score \texttt{>= 6} = investiguer, score
+\texttt{>= 8} = prioriser. Un résultat sans invariant partagé est un faux
+positif, même s'il ressemble au motif.
+
+\chapter{Rendu et évaluation}
+
+\begin{console}
+A-EPI-002-nftables-variant-hunting/
+|-- ex00/model.md
+|-- ex01/nft-byteorder.md
+|-- ex02/gc-catchall.md
+|-- ex03/rules/
++-- ex04/findings.md
+\end{console}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|l|X|c|}
+\hline
+\textbf{Critère} & \textbf{Attendu} & \textbf{Points} \\ \hline
+Modèle & Génération et visibilité expliquées & 4 \\ \hline
+Variantes & Cinq opérations comparées, statuts justifiés & 5 \\ \hline
+GC & Lien catchall, busy mark et double free & 5 \\ \hline
+Règles & Trois règles testées, exemples positifs/négatifs & 4 \\ \hline
+Triage & Résultats dédupliqués et priorisés & 4 \\ \hline
+\end{tabularx}
+\end{center}
+
+\chapter{Ressources par exercice}
+
+\subsection*{Exercice 00 --- Modèle de transaction et de génération}
+\begin{itemize}
+  \item nf\_tables :
+        \url{https://www.kernel.org/doc/html/latest/networking/nf_tables.html}
+  \item Papier, sections 6.1 et 6.2.
+  \item À chercher : \texttt{nft\_trans}, \texttt{genmask},
+        \texttt{nft\_is\_active\_next}, \texttt{commit\_list}.
+\end{itemize}
+
+\subsection*{Exercice 01 --- Variantes de CVE-2023-35001}
+\begin{itemize}
+  \item NVD : \url{https://nvd.nist.gov/vuln/detail/CVE-2023-35001}
+  \item Analyse : \url{https://pwning.tech/nftables/}
+  \item Papier, section 6.2.
+  \item À chercher : \texttt{nft\_byteorder}, \texttt{union},
+        \texttt{priv->len}, \texttt{sizeof}, \texttt{stride}.
+\end{itemize}
+
+\subsection*{Exercice 02 --- Catchall, GC et double-free pipapo}
+\begin{itemize}
+  \item NVD : CVE-2023-4244, CVE-2024-1085, CVE-2024-26809.
+  \item OtterSec, OtterRoot :
+        \url{https://osec.io/blog/netfilter-universal-root-1-day/}
+  \item Commits \texttt{b0e256f3dd2ba6532f37c5c22e07cb07a36031ee},
+        \texttt{9827a0e6e23bf43003cd3d5b7fb11baf59a35e1e} et
+        \texttt{5f68718b34a531a556f2f50300ead2862278da26}.
+  \item À chercher : \texttt{nft\_set\_pipapo\_destroy},
+        \texttt{nft\_set\_pipapo\_match\_destroy}, \texttt{priv->dirty},
+        \texttt{set->dead}.
+\end{itemize}
+
+\subsection*{Exercice 03 --- Écrire les règles}
+\begin{itemize}
+  \item Semgrep : \url{https://semgrep.dev/docs/}
+  \item Weggli : \url{https://github.com/weggli-rs/weggli}
+  \item Dépôt compagnon : \texttt{rules/semgrep/} et \texttt{rules/cocci/}.
+  \item À chercher : \texttt{nft\_is\_active}, \texttt{nft\_is\_active\_next},
+        \texttt{scalar32\_min\_max}, \texttt{READ\_ONCE}.
+\end{itemize}
+
+\subsection*{Exercice 04 --- Lancer et trier}
+\begin{itemize}
+  \item Papier, section 18.8.
+  \item Dépôt compagnon : \texttt{rules/TRIAGE.md}.
+  \item NVD : \url{https://nvd.nist.gov/}
+  \item À chercher : \texttt{false positive}, \texttt{twin},
+        \texttt{reachable}, \texttt{score >= 6}.
+\end{itemize}
+
+\chapter{Sources}
+\begin{itemize}
+  \item Phrack, \emph{Security is failure: Every Patch Is a Guess},
+        sections 6.2, 6.3 et 14.
+  \item NVD : CVE-2023-35001, CVE-2023-4244, CVE-2024-1085,
+        CVE-2024-26809.
+  \item Commit \texttt{b1db244ffd041a49ecc9618e8feb6b5c1afcdaa7}.
+  \item OtterSec, \emph{OtterRoot: Netfilter universal root 1-day} :
+        \url{https://osec.io/blog/netfilter-universal-root-1-day/}
+  \item Commits \texttt{b0e256f3dd2ba6532f37c5c22e07cb07a36031ee},
+        \texttt{9827a0e6e23bf43003cd3d5b7fb11baf59a35e1e} et
+        \texttt{5f68718b34a531a556f2f50300ead2862278da26}.
+  \item Documentation nf\_tables et RCU.
+\end{itemize}
+
+\end{document}

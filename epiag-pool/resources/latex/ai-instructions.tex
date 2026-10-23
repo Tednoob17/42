@@ -1,0 +1,175 @@
+\chapter{AI Instructions}
+
+\section{Policy Overview}
+
+AI-assisted coding tools (ChatGPT, Claude, Copilot, Gemini,
+Cursor, Codeium, and similar) are \textbf{permitted} throughout
+this curriculum. Security research is a field where AI proficiency
+is becoming essential --- learning to use these tools effectively
+is part of your training.
+
+However, the goal is \textbf{understanding}, not automation.
+If you cannot explain every line of your exploit without AI
+assistance, you have not completed the exercise.
+
+\begin{warning}
+  Using AI to bypass an exercise's learning objective --- for
+  example, asking it to reverse-engineer a binary so you do not
+  have to learn the disassembler, or to generate an entire exploit
+  chain you do not understand --- defeats the purpose of the
+  curriculum and will be treated as academic dishonesty.
+\end{warning}
+
+\section{Permitted Uses}
+
+\begin{itemize}
+  \item \textbf{Concept explanation}. Ask AI to clarify a vulnerability
+        class, a kernel subsystem, or a network protocol.
+  \item \textbf{Scaffolding code}. Generate starter code for a harness,
+        a fuzzer, or a PoC skeleton --- then modify and extend it
+        yourself.
+  \item \textbf{Debugging}. Explain error messages, decompiler output,
+        or unexpected crash behavior.
+  \item \textbf{Documentation summarization}. Condense a long RFC or
+        technical blog post into actionable notes.
+  \item \textbf{Translation}. Translate technical content between
+        English and French (both languages are used in this curriculum).
+  \item \textbf{Report drafting}. Ask for help structuring a bug bounty
+        report --- but fill in the technical content yourself.
+\end{itemize}
+
+\section{Prohibited Uses}
+
+\begin{itemize}
+  \item \textbf{Complete exploit generation}. Asking an AI to write
+        the full exploit for an exercise, then submitting it without
+        understanding.
+  \item \textbf{Bypassing exercise constraints}. Using AI to circumvent
+        a restriction that the exercise explicitly imposes (e.g.\
+        ``do not use automated scanners'').
+  \item \textbf{Automated vulnerability discovery}. Running AI-driven
+        scanning tools that replace the manual analysis you are meant
+        to practice.
+  \item \textbf{Writing evaluation rubrics}. You are not allowed to
+        use AI to generate peer-evaluation criteria or answers.
+  \item \textbf{Plagiarizing without attribution}. Copying AI output
+        without citing it (see Section~\ref{sec:ai-citation}).
+\end{itemize}
+
+\section{Personal Responsibility}
+
+When you ask an AI to generate exploit code, you become responsible
+for every byte of that output before using it against any target.
+
+\begin{enumerate}
+  \item \textbf{Read the generated code} line by line.
+  \item \textbf{Identify any assumptions} the AI made (architecture,
+        kernel version, compiler flags, network layout).
+  \item \textbf{Test in isolation} before running against an exercise
+        target.
+  \item \textbf{Understand the failure modes}. If the generated exploit
+        crashes or hangs, you must diagnose and fix it yourself.
+\end{enumerate}
+
+\hint{If an AI generates code you do not understand, ask it to
+explain. If you still do not understand after the explanation,
+the code is not ready to use. Switch to a simpler approach
+you can fully control.}
+
+\section{Mandatory AI Citation}
+\label{sec:ai-citation}
+
+Every file that contains AI-generated or AI-assisted code must
+include a citation comment. The format is:
+
+\begin{minted}{python}
+# Generated with assistance from <tool> on <date>.
+# Prompt: <one-line summary of the prompt>
+# Verified by: <method used to verify the output>
+\end{minted}
+
+\subsection*{Examples}
+
+\textbf{Python}:
+\begin{minted}{python}
+# Generated with assistance from Claude 3.5 Sonnet on 2025-03-14.
+# Prompt: "Write a Python script that sends HTTP requests with
+# modified price fields to /api/checkout/pay"
+# Verified by: manual review of each request and response
+\end{minted}
+
+\textbf{C}:
+\begin{minted}{c}
+/* Generated with assistance from GitHub Copilot on 2025-03-14.
+ * Prompt: "Implement a stack-based buffer overflow with
+ * ret2libc for x86_64 Linux"
+ * Verified by: compiled with -fno-stack-protector and
+ * tested against local binary with ASLR disabled */
+\end{minted}
+
+\textbf{Markdown (report)}:
+\begin{minted}{html}
+<!--
+Generated with assistance from ChatGPT-4 on 2025-03-14.
+Prompt: "Structure a bug bounty report for IDOR with
+sections: summary, steps, impact, mitigation"
+Verified by: all technical content written manually,
+AI only suggested structure
+-->
+\end{minted}
+
+\subsection*{Multiple AI interactions}
+
+If you used multiple AI tools, or iterated through several prompts,
+cite each significant interaction. A group of related prompts can
+be summarized:
+
+\begin{minted}{html}
+<!--
+AI assistance used in this file:
+- Claude 3.5 Sonnet (2025-03-14): harness skeleton generation
+- ChatGPT-4 (2025-03-14): crash triage help
+- Copilot (2025-03-15): inline autocomplete for loop logic
+All generated code reviewed and modified manually.
+-->
+\end{minted}
+
+\section{Peer Evaluation and AI}
+
+During peer evaluation, the evaluator may:
+
+\begin{itemize}
+  \item Ask you to \textbf{explain any AI-generated code} line by line.
+  \item Ask you to \textbf{reproduce the reasoning} without AI assistance.
+  \item Ask to see your \textbf{prompt history} for a given exercise.
+  \item Deduct points if AI citation is missing or if you cannot
+        explain code that AI generated.
+\end{itemize}
+
+\begin{warning}
+  Claiming AI-generated code as your own work (failure to cite)
+  is plagiarism. If the evaluator suspects plagiarism, they may
+  escalate to the pedagogical team for review.
+\end{warning}
+
+\section{Ethics Reminder}
+
+\begin{itemize}
+  \item AI models can produce incorrect, dangerous, or illegal code.
+        You are \textbf{responsible} for verifying every output before
+        execution.
+  \item AI models trained on public security research may reproduce
+        verbatim code from GPL-licensed projects. Check licenses
+        before incorporating into your work.
+  \item Do not input sensitive or proprietary code into cloud-based
+        AI tools. Use local models (Llama, Mistral, DeepSeek) for
+        work involving non-public targets.
+  \item The security research ethics you learn here apply to AI
+        usage: do not ask an AI to generate malware, ransomware,
+        or code intended to harm systems outside the exercise scope.
+\end{itemize}
+
+\info{Proficiency with AI tools is a marketable skill in modern
+bug bounty hunting. Use them wisely, cite them honestly, and
+always maintain your own understanding of every exploit you
+deploy.}

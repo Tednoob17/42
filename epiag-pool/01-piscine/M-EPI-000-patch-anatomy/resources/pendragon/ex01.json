@@ -1,0 +1,21 @@
+{
+  "exercise": "M-EPI-000-patch-anatomy/ex01",
+  "title": "Le patch réel CVE-2024-1085",
+  "difficulty": "medium",
+  "points": 4,
+  "timeout": 30,
+  "tests": [
+    {
+      "name": "File exists: ex01/cve-2024-1085.md",
+      "type": "file_exists",
+      "file": "ex01/cve-2024-1085.md"
+    },
+    {
+      "name": "ex01/cve-2024-1085.md has minimum length",
+      "type": "custom",
+      "command": "f=\"ex01/cve-2024-1085.md\"; [ -s \"$f\" ] || exit 1; [ \"$(wc -c < \"$f\")\" -gt 120 ] || exit 1; echo OK",
+      "expected_exit": 0,
+      "timeout": 10
+    }
+  ]
+}

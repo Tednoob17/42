@@ -1,0 +1,21 @@
+{
+  "exercise": "M-EPI-004-ebpf-io-uring/ex02",
+  "title": "OR\\_NULL et pruning",
+  "difficulty": "hard",
+  "points": 5,
+  "timeout": 30,
+  "tests": [
+    {
+      "name": "File exists: ex02/oracle.md",
+      "type": "file_exists",
+      "file": "ex02/oracle.md"
+    },
+    {
+      "name": "ex02/oracle.md has minimum length",
+      "type": "custom",
+      "command": "f=\"ex02/oracle.md\"; [ -s \"$f\" ] || exit 1; [ \"$(wc -c < \"$f\")\" -gt 120 ] || exit 1; echo OK",
+      "expected_exit": 0,
+      "timeout": 10
+    }
+  ]
+}

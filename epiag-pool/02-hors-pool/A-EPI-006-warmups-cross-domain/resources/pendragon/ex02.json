@@ -1,0 +1,21 @@
+{
+  "exercise": "A-EPI-006-warmups-cross-domain/ex02",
+  "title": "MINA : la matrice des branches",
+  "difficulty": "hard",
+  "points": 4,
+  "timeout": 30,
+  "tests": [
+    {
+      "name": "File exists: ex02/branch-matrix.md",
+      "type": "file_exists",
+      "file": "ex02/branch-matrix.md"
+    },
+    {
+      "name": "ex02/branch-matrix.md has minimum length",
+      "type": "custom",
+      "command": "f=\"ex02/branch-matrix.md\"; [ -s \"$f\" ] || exit 1; [ \"$(wc -c < \"$f\")\" -gt 160 ] || exit 1; echo OK",
+      "expected_exit": 0,
+      "timeout": 10
+    }
+  ]
+}

@@ -1,0 +1,189 @@
+\chapter{Instructions sur l'IA}
+
+\section{Aperçu de la Politique}
+
+Les outils de codage assistés par IA (ChatGPT, Claude, Copilot, Gemini,
+Cursor, Codeium, et similaires) sont \textbf{autorisés} tout au long
+de ce cursus. La recherche en sécurité est un domaine où la maîtrise
+de l'IA devient essentielle --- apprendre à utiliser ces outils
+efficacement fait partie de votre formation.
+
+Cependant, l'objectif est la \textbf{compréhension}, pas l'automatisation.
+Si vous ne pouvez pas expliquer chaque ligne de votre exploit sans
+l'aide de l'IA, vous n'avez pas terminé l'exercice.
+
+\begin{warning}
+  Utiliser l'IA pour contourner l'objectif pédagogique d'un exercice
+  --- par exemple, lui demander de rétro-ingéniérer un binaire pour
+  ne pas avoir à apprendre le désassembleur, ou de générer une chaîne
+  d'exploitation complète que vous ne comprenez pas --- va à l'encontre
+  du but du cursus et sera traité comme une fraude académique.
+\end{warning}
+
+\section{Utilisations Autorisées}
+
+\begin{itemize}
+  \item \textbf{Explication de concepts}. Demander à l'IA de clarifier
+        une classe de vulnérabilité, un sous-système du noyau, ou un
+        protocole réseau.
+  \item \textbf{Échafaudage de code}. Générer du code de départ pour
+        un harnais, un fuzzer, ou un squelette de PoC --- puis le
+        modifier et l'étendre vous-même.
+  \item \textbf{Débogage}. Expliquer des messages d'erreur, la sortie
+        d'un désassembleur, ou un comportement de crash inattendu.
+  \item \textbf{Résumé de documentation}. Condenser une longue RFC ou
+        un article technique en notes exploitables.
+  \item \textbf{Traduction}. Traduire du contenu technique entre
+        l'anglais et le français (les deux langues sont utilisées
+        dans ce cursus).
+  \item \textbf{Rédaction de rapports}. Demander de l'aide pour
+        structurer un rapport de bug bounty --- mais remplir le
+        contenu technique vous-même.
+\end{itemize}
+
+\section{Utilisations Interdites}
+
+\begin{itemize}
+  \item \textbf{Génération complète d'exploit}. Demander à l'IA
+        d'écrire l'exploit complet d'un exercice, puis le soumettre
+        sans le comprendre.
+  \item \textbf{Contournement des contraintes de l'exercice}. Utiliser
+        l'IA pour contourner une restriction que l'exercice impose
+        explicitement (p.\ ex.\ «~n'utilisez pas de scanners
+        automatisés~»).
+  \item \textbf{Découverte automatisée de vulnérabilités}. Exécuter des
+        outils de scan pilotés par IA qui remplacent l'analyse manuelle
+        que vous êtes censé pratiquer.
+  \item \textbf{Rédaction des grilles d'évaluation}. Vous n'êtes pas
+        autorisé à utiliser l'IA pour générer des critères d'évaluation
+        par les pairs ou des réponses.
+  \item \textbf{Plagiat sans attribution}. Copier le résultat de l'IA
+        sans le citer (voir Section~\ref{sec:ai-citation}).
+\end{itemize}
+
+\section{Responsabilité Personnelle}
+
+Lorsque vous demandez à l'IA de générer du code d'exploit, vous
+devenez responsable de chaque octet de ce résultat avant de
+l'utiliser contre une cible.
+
+\begin{enumerate}
+  \item \textbf{Lisez le code généré} ligne par ligne.
+  \item \textbf{Identifiez toutes les hypothèses} faites par l'IA
+        (architecture, version du noyau, drapeaux du compilateur,
+        topologie réseau).
+  \item \textbf{Testez en isolation} avant d'exécuter contre une
+        cible d'exercice.
+  \item \textbf{Comprenez les modes d'échec}. Si l'exploit généré
+        plante ou se bloque, vous devez diagnostiquer et corriger
+        le problème vous-même.
+\end{enumerate}
+
+\hint{Si l'IA génère du code que vous ne comprenez pas, demandez-lui
+de l'expliquer. Si vous ne comprenez toujours pas après
+l'explication, le code n'est pas prêt à être utilisé. Passez à
+une approche plus simple que vous maîtrisez entièrement.}
+
+\section{Citation Obligatoire de l'IA}
+\label{sec:ai-citation}
+
+Chaque fichier contenant du code généré ou assisté par l'IA doit
+inclure un commentaire de citation. Le format est~:
+
+\begin{minted}{python}
+# Generated with assistance from <tool> on <date>.
+# Prompt: <one-line summary of the prompt>
+# Verified by: <method used to verify the output>
+\end{minted}
+
+\subsection*{Exemples}
+
+\textbf{Python}~:
+\begin{minted}{python}
+# Generated with assistance from Claude 3.5 Sonnet on 2025-03-14.
+# Prompt: "Write a Python script that sends HTTP requests with
+# modified price fields to /api/checkout/pay"
+# Verified by: manual review of each request and response
+\end{minted}
+
+\textbf{C}~:
+\begin{minted}{c}
+/* Generated with assistance from GitHub Copilot on 2025-03-14.
+ * Prompt: "Implement a stack-based buffer overflow with
+ * ret2libc for x86_64 Linux"
+ * Verified by: compiled with -fno-stack-protector and
+ * tested against local binary with ASLR disabled */
+\end{minted}
+
+\textbf{Markdown (rapport)}~:
+\begin{minted}{html}
+<!--
+Generated with assistance from ChatGPT-4 on 2025-03-14.
+Prompt: "Structure a bug bounty report for IDOR with
+sections: summary, steps, impact, mitigation"
+Verified by: all technical content written manually,
+AI only suggested structure
+-->
+\end{minted}
+
+\subsection*{Interactions multiples avec l'IA}
+
+Si vous avez utilisé plusieurs outils d'IA, ou itéré à travers
+plusieurs invites, citez chaque interaction significative. Un
+groupe d'invites connexes peut être résumé~:
+
+\begin{minted}{html}
+<!--
+AI assistance used in this file:
+- Claude 3.5 Sonnet (2025-03-14): harness skeleton generation
+- ChatGPT-4 (2025-03-14): crash triage help
+- Copilot (2025-03-15): inline autocomplete for loop logic
+All generated code reviewed and modified manually.
+-->
+\end{minted}
+
+\section{Évaluation par les Pairs et l'IA}
+
+Lors de l'évaluation par les pairs, l'évaluateur peut~:
+
+\begin{itemize}
+  \item Vous demander d'\textbf{expliquer tout code généré par l'IA}
+        ligne par ligne.
+  \item Vous demander de \textbf{reproduire le raisonnement} sans
+        l'aide de l'IA.
+  \item Demander à voir votre \textbf{historique d'invites} pour un
+        exercice donné.
+  \item Déduire des points si la citation de l'IA est manquante ou
+        si vous ne pouvez pas expliquer le code que l'IA a généré.
+\end{itemize}
+
+\begin{warning}
+  Présenter le code généré par l'IA comme votre propre travail
+  (défaut de citation) est du plagiat. Si l'évaluateur soupçonne
+  du plagiat, il peut saisir l'équipe pédagogique pour examen.
+\end{warning}
+
+\section{Rappel Éthique}
+
+\begin{itemize}
+  \item Les modèles d'IA peuvent produire du code incorrect,
+        dangereux, ou illégal. Vous êtes \textbf{responsable} de
+        vérifier chaque résultat avant exécution.
+  \item Les modèles d'IA entraînés sur la recherche publique en
+        sécurité peuvent reproduire textuellement du code provenant
+        de projets sous licence GPL. Vérifiez les licences avant
+        d'intégrer ces éléments dans votre travail.
+  \item Ne saisissez pas de code sensible ou propriétaire dans des
+        outils d'IA hébergés dans le cloud. Utilisez des modèles
+        locaux (Llama, Mistral, DeepSeek) pour les travaux impliquant
+        des cibles non publiques.
+  \item L'éthique de la recherche en sécurité que vous apprenez ici
+        s'applique à l'utilisation de l'IA~: ne demandez pas à l'IA
+        de générer des malwares, des rançongiciels, ou du code destiné
+        à nuire à des systèmes en dehors du cadre de l'exercice.
+\end{itemize}
+
+\info{La maîtrise des outils d'IA est une compétence recherchée dans
+la chasse aux bogues moderne. Utilisez-les sagement, citez-les
+honnêtement, et conservez toujours votre propre compréhension de
+chaque exploit que vous déployez.}

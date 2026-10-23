@@ -1,0 +1,21 @@
+{
+  "exercise": "M-EPI-001-mutation-model/ex01",
+  "title": "Chemins nominaux et chemins d'abandon",
+  "difficulty": "medium",
+  "points": 4,
+  "timeout": 30,
+  "tests": [
+    {
+      "name": "File exists: ex01/state-machine.md",
+      "type": "file_exists",
+      "file": "ex01/state-machine.md"
+    },
+    {
+      "name": "ex01/state-machine.md has minimum length",
+      "type": "custom",
+      "command": "f=\"ex01/state-machine.md\"; [ -s \"$f\" ] || exit 1; [ \"$(wc -c < \"$f\")\" -gt 120 ] || exit 1; echo OK",
+      "expected_exit": 0,
+      "timeout": 10
+    }
+  ]
+}

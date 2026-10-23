@@ -1,0 +1,165 @@
+\documentclass{training}
+\schoollogo{../../../resources/latex/crack.pdf}
+\input{../../../resources/latex/epiag-preamble.tex}
+
+\begin{document}
+
+\title{Rush --- Variant Hunt --- M-EPI-005}
+\subtitle{Trouver un twin, pas un exploit}
+\member{Ted ``Tedsig42'' Kouhouenou}{ted.sig42@tutamail.com}
+\summary{Rush de fin de piscine : choisir un correctif, appliquer la boucle d'audit différentiel, produire un rapport de variante et le défendre en cinq minutes. Le rendu doit être reproductible et sans code d'exploitation.}
+\version{1.0}
+\prerequisite{M-EPI-000 à M-EPI-004}
+\maketitle
+
+\newpage
+\tableofcontents
+\newpage
+
+\chapter{Règles}
+
+\begin{itemize}
+  \item Durée : une journée, en équipe de deux ou trois.
+  \item Sujet libre dans un sous-système que vous pouvez lire : nf\_tables,
+        eBPF, io\_uring, ou un projet utilisateur.
+  \item Le correctif choisi doit être public, petit (moins de cinquante
+        lignes ajoutées) et documenté par un CVE ou un avis de sécurité.
+  \item Aucun exploit, aucun test sur une cible réelle, aucun déni de
+        service.
+  \item Le rapport doit contenir toutes les commandes nécessaires pour
+        refaire l'analyse.
+\end{itemize}
+
+\input{../../../resources/latex/deliverable-header.tex}
+\input{../../../resources/latex/common-instructions.fr.tex}
+\input{../../../resources/latex/ai-instructions.fr.tex}
+
+\chapter{Objectif}
+
+À la fin du rush, vous devez pouvoir dire :
+
+\begin{quote}
+« Voici un correctif. Voici l'hypothèse qu'il encode. Voici une fonction
+voisine qui partage cette hypothèse sans la vérifier. Voici pourquoi ce
+n'est peut-être pas un bug, et voici le test qui le confirmerait ou
+l'infirmerait. »
+\end{quote}
+
+Le résultat peut être un faux positif. Un faux positif bien argumenté vaut
+mieux qu'un « twin » inventé.
+
+\chapter{Partie A --- Cadrage}
+
+Avant de lire le code, remplissez une fiche de cadrage d'une page :
+
+\begin{enumerate}
+  \item \textbf{Cible} : projet, fichier, fonction, commit.
+  \item \textbf{CVE ou avis} : identifiant, date, score CVSS.
+  \item \textbf{Hypothèse initiale} : ce que le correctif suppose vrai.
+  \item \textbf{Périmètre} : ce que vous allez lire, et ce que vous
+        n'allez pas lire.
+  \item \textbf{Critère d'arrêt} : quand déciderez-vous que le candidat
+        est un faux positif ?
+\end{enumerate}
+
+Le cadrage est validé par un pair avant de continuer. Un cadrage trop large
+est refusé.
+
+\chapter{Partie B --- Analyse}
+
+Appliquez la boucle :
+
+\begin{enumerate}
+  \item \textbf{Extraire} : les lignes ajoutées et la fonction.
+  \item \textbf{Paralléliser} : au moins cinq fonctions voisines, avec
+        \texttt{ctags} et \texttt{grep}.
+  \item \textbf{Vérifier} : pour chaque twin, l'invariant partagé, le test
+        manquant, et le statut.
+  \item \textbf{Trier} : score selon la grille du papier.
+\end{enumerate}
+
+Livrables intermédiaires :
+
+\begin{console}
+queries/
+|-- ctags.txt
+|-- grep.txt
++-- notes.md
+analysis.md
+\end{console}
+
+\chapter{Partie C --- Rapport et soutenance}
+
+Le rapport final \texttt{variant-report.md} contient :
+
+\begin{enumerate}
+  \item un résumé de dix lignes ;
+  \item le diff annoté ;
+  \item la carte des twins ;
+  \item le candidat retenu et son score ;
+  \item les preuves (commandes, extraits, sources) ;
+  \item les limites et les faux positifs écartés ;
+  \item une conclusion : confirmer, infirmer, ou demander un test
+        supplémentaire.
+\end{enumerate}
+
+La soutenance dure cinq minutes, suivie de cinq minutes de questions. Vous
+devez montrer le diff, la requête qui trouve le twin, et le raisonnement qui
+mène au verdict.
+
+\chapter{Grille d'évaluation}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|l|X|c|}
+\hline
+\textbf{Critère} & \textbf{Attendu} & \textbf{Points} \\ \hline
+Cadrage & Périmètre et critère d'arrêt explicites & 2 \\ \hline
+Extraction & Diff et fonction correctement isolés & 3 \\ \hline
+Twins & Cinq candidats, statuts justifiés & 5 \\ \hline
+Vérification & Invariant, test manquant, faux positifs assumés & 5 \\ \hline
+Triage & Score cohérent et action claire & 3 \\ \hline
+Soutenance & Cinq minutes claires, questions maîtrisées & 2 \\ \hline
+& \textbf{Total} & \textbf{20} \\ \hline
+\end{tabularx}
+\end{center}
+
+\chapter{Ressources par phase}
+
+\subsection*{Partie A --- Cadrage}
+\begin{itemize}
+  \item Papier, sections 3, 4 et 18.7.
+  \item Dépôt compagnon : \texttt{rules/TRIAGE.md}.
+  \item NVD : \url{https://nvd.nist.gov/}
+  \item À chercher : \texttt{patch commit}, \texttt{CVE}, \texttt{affected
+        versions}, \texttt{fix commit}.
+\end{itemize}
+
+\subsection*{Partie B --- Analyse}
+\begin{itemize}
+  \item Universal Ctags : \url{https://docs.ctags.io/}
+  \item Weggli : \url{https://github.com/weggli-rs/weggli}
+  \item Semgrep : \url{https://semgrep.dev/docs/}
+  \item Papier, sections 4 et 18.3.
+  \item À chercher : \texttt{ctags -R}, \texttt{grep '\string^+'}, \texttt{twin},
+        \texttt{structural symmetry}.
+\end{itemize}
+
+\subsection*{Partie C --- Rapport et soutenance}
+\begin{itemize}
+  \item Papier, section 18.8 : scorecard.
+  \item Dépôt compagnon : \texttt{validation/methodology.md}.
+  \item NVD : \url{https://nvd.nist.gov/}
+  \item À chercher : \texttt{score >= 6}, \texttt{score >= 8},
+        \texttt{false positive}.
+\end{itemize}
+
+\chapter{Sources}
+\begin{itemize}
+  \item Phrack, \emph{Security is failure: Every Patch Is a Guess},
+        sections 3, 6 et 7.
+  \item Dépôt compagnon : \texttt{rules/TRIAGE.md},
+        \texttt{validation/methodology.md}.
+  \item NVD : \url{https://nvd.nist.gov/}
+\end{itemize}
+
+\end{document}

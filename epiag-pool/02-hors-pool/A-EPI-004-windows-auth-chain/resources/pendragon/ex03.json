@@ -1,0 +1,21 @@
+{
+  "exercise": "A-EPI-004-windows-auth-chain/ex03",
+  "title": "La chaîne 2026",
+  "difficulty": "hard",
+  "points": 5,
+  "timeout": 30,
+  "tests": [
+    {
+      "name": "File exists: ex03/chain.md",
+      "type": "file_exists",
+      "file": "ex03/chain.md"
+    },
+    {
+      "name": "ex03/chain.md has minimum length",
+      "type": "custom",
+      "command": "f=\"ex03/chain.md\"; [ -s \"$f\" ] || exit 1; [ \"$(wc -c < \"$f\")\" -gt 120 ] || exit 1; echo OK",
+      "expected_exit": 0,
+      "timeout": 10
+    }
+  ]
+}

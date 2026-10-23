@@ -1,0 +1,114 @@
+\subsection*{Format du rendu --- en-tête obligatoire}
+
+Tout fichier rendu dans ce module doit commencer par l'en-tête
+ci-dessous, \textbf{adapté à la syntaxe de commentaire du langage}
+utilisé.
+
+\subsubsection*{Modèle générique}
+
+\begin{minted}{c}
+/**
+ * Module: <code module>
+ * Exercise: <numéro exo>
+ * File: <nom du fichier>
+ * Author: <votre login JeuneCrack>
+ *
+ * Description: <une phrase, pas de roman>
+ *
+ * Return: <voir ci-dessous>
+ */
+\end{minted}
+
+\subsubsection*{Login}
+
+Votre identifiant \textbf{JeuneCrack} (ex: \texttt{tedsig42}).
+Pour un rendu en binôme : \texttt{login1/login2}.
+Ajoutez un handle Matrix après le login si vous le souhaitez
+(ex: \texttt{tedsig42 @tedsig42}).
+
+\subsubsection*{Return --- selon le type de fichier}
+
+\begin{tabularx}{\linewidth}{lX}
+  \toprule
+  \textbf{Type de fichier} & \textbf{Valeur de Return} \\
+  \midrule
+  C (\texttt{.c}) &
+  \texttt{return (0);} (succès),
+  \texttt{return (-1);} (erreur),
+  \texttt{return (valeur);} (résultat calculé) \\
+
+  Python (\texttt{.py}) &
+  \texttt{0} (succès),
+  \texttt{1} (erreur),
+  \texttt{N/A} (analyse, script sans exit) \\
+
+  Shell (\texttt{.sh}) &
+  \texttt{exit 0} (succès),
+  \texttt{exit 1} (erreur) \\
+
+  Markdown (\texttt{.md}) &
+  \texttt{N/A} --- les fichiers d'analyse n'ont pas de valeur de retour \\
+
+  Exploit C/Python &
+  \texttt{shell} (shell obtenu),
+  \texttt{flag: <flag>} (flag capturé),
+  \texttt{proof: <hash>} (preuve de concept) \\
+
+  Binaire (\texttt{.bin}) &
+  \texttt{N/A} --- pas d'en-tête pour les fichiers binaires \\
+  \bottomrule
+\end{tabularx}
+
+\subsubsection*{Exemples par langage}
+
+\textbf{C (\texttt{.c})} :
+\begin{minted}{c}
+/**
+ * Module: F-EXP-001
+ * Exercise: ex02
+ * File: exploit.c
+ * Author: tedsig42
+ *
+ * Description: Buffer overflow with ret2libc
+ *
+ * Return: 0
+ */
+\end{minted}
+
+\textbf{Python (\texttt{.py})} :
+\begin{minted}{python}
+# Module: F-WEB-001
+# Exercise: ex05
+# File: ssrf-exploit.py
+# Author: tedsig42
+#
+# Description: Blind SSRF bypass via redirect
+#
+# Return: 0
+\end{minted}
+
+\textbf{Shell (\texttt{.sh})} :
+\begin{minted}{bash}
+# Module: F-SUP-001
+# Exercise: ex03
+# File: dependency-confusion.sh
+# Author: tedsig42
+#
+# Description: Automated dependency confusion test
+#
+# Return: exit 0
+\end{minted}
+
+\textbf{Markdown (\texttt{.md})} --- analyse, rapport :
+\begin{Verbatim}[fontsize=\normalsize]
+<!--
+Module: M-SRC-001
+Exercise: ex04
+File: audit-report.md
+Author: tedsig42
+
+Description: Code audit of vulnerable-httpd
+
+Return: N/A
+-->
+\end{Verbatim}

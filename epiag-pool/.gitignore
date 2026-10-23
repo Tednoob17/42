@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.aux
+*.log
+*.out
+*.toc
+*.err
+*.pyg
+.pendragon_result.json
+_minted/
+subject/*.pdf
+subject/_minted/
+*/subject/*.pdf
+*/subject/_minted/
+*/*/subject/*.pdf
+!*/*/subject/*_fr.pdf
+*/*/subject/_minted/

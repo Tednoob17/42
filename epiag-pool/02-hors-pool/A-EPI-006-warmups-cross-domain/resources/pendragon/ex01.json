@@ -1,0 +1,21 @@
+{
+  "exercise": "A-EPI-006-warmups-cross-domain/ex01",
+  "title": "MINA : l'ordre des opérations",
+  "difficulty": "medium",
+  "points": 4,
+  "timeout": 30,
+  "tests": [
+    {
+      "name": "File exists: ex01/mina-fsm.md",
+      "type": "file_exists",
+      "file": "ex01/mina-fsm.md"
+    },
+    {
+      "name": "ex01/mina-fsm.md has minimum length",
+      "type": "custom",
+      "command": "f=\"ex01/mina-fsm.md\"; [ -s \"$f\" ] || exit 1; [ \"$(wc -c < \"$f\")\" -gt 160 ] || exit 1; echo OK",
+      "expected_exit": 0,
+      "timeout": 10
+    }
+  ]
+}

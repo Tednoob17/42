@@ -1,0 +1,26 @@
+{
+  "exercise": "A-EPI-001-patch-diffing/ex03",
+  "title": "Mesurer le patch gap",
+  "difficulty": "medium",
+  "points": 4,
+  "timeout": 30,
+  "tests": [
+    {
+      "name": "File exists: ex03/patch-gap.md",
+      "type": "file_exists",
+      "file": "ex03/patch-gap.md"
+    },
+    {
+      "name": "ex03/patch-gap.md has minimum length",
+      "type": "custom",
+      "command": "f=\"ex03/patch-gap.md\"; [ -s \"$f\" ] || exit 1; [ \"$(wc -c < \"$f\")\" -gt 120 ] || exit 1; echo OK",
+      "expected_exit": 0,
+      "timeout": 10
+    },
+    {
+      "name": "File exists: ex03/patch-gap.py",
+      "type": "file_exists",
+      "file": "ex03/patch-gap.py"
+    }
+  ]
+}

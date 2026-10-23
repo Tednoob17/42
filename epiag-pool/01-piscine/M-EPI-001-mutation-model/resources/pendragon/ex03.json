@@ -1,0 +1,21 @@
+{
+  "exercise": "M-EPI-001-mutation-model/ex03",
+  "title": "Écrire une fiche de famille",
+  "difficulty": "hard",
+  "points": 4,
+  "timeout": 30,
+  "tests": [
+    {
+      "name": "File exists: ex03/family-card.md",
+      "type": "file_exists",
+      "file": "ex03/family-card.md"
+    },
+    {
+      "name": "ex03/family-card.md has minimum length",
+      "type": "custom",
+      "command": "f=\"ex03/family-card.md\"; [ -s \"$f\" ] || exit 1; [ \"$(wc -c < \"$f\")\" -gt 120 ] || exit 1; echo OK",
+      "expected_exit": 0,
+      "timeout": 10
+    }
+  ]
+}

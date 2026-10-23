@@ -1,0 +1,33 @@
+{
+  "exercise": "M-EPI-000-patch-anatomy/ex00",
+  "title": "Anatomie d'un diff",
+  "difficulty": "easy",
+  "points": 2,
+  "timeout": 30,
+  "tests": [
+    {
+      "name": "File exists: ex00/patch-anatomy.md",
+      "type": "file_exists",
+      "file": "ex00/patch-anatomy.md"
+    },
+    {
+      "name": "ex00/patch-anatomy.md has minimum length",
+      "type": "custom",
+      "command": "f=\"ex00/patch-anatomy.md\"; [ -s \"$f\" ] || exit 1; [ \"$(wc -c < \"$f\")\" -gt 120 ] || exit 1; echo OK",
+      "expected_exit": 0,
+      "timeout": 10
+    },
+    {
+      "name": "File exists: ex00/assumptions.md",
+      "type": "file_exists",
+      "file": "ex00/assumptions.md"
+    },
+    {
+      "name": "ex00/assumptions.md has minimum length",
+      "type": "custom",
+      "command": "f=\"ex00/assumptions.md\"; [ -s \"$f\" ] || exit 1; [ \"$(wc -c < \"$f\")\" -gt 120 ] || exit 1; echo OK",
+      "expected_exit": 0,
+      "timeout": 10
+    }
+  ]
+}
