@@ -20,6 +20,7 @@ candidats sans transformer l'analyse en exploitation.
 
 ```text
 epiag-pool/
+|-- 00-guide/          # guide de lecture du papier, en PDF
 |-- 01-piscine/        # 7 jours, progression guidée
 |-- 02-hors-pool/      # modules avancés, 2 à 3 jours chacun
 |-- RESEARCH.md        # sources 2024-2026 et matrice d'intégration
@@ -54,6 +55,7 @@ epiag-pool/
 Chaque module contient un `subject/Makefile` autonome :
 
 ```sh
+make -C 00-guide/PAPER-GUIDE-paper/subject
 make -C 01-piscine/M-EPI-000-patch-anatomy/subject
 make -C 02-hors-pool/A-EPI-001-patch-diffing/subject
 ```
@@ -63,7 +65,7 @@ Le Makefile produit un PDF nommé `<MODULE>_fr.pdf`. Il faut
 français ; les identifiants de modules, de fichiers et de fonctions restent
 en anglais.
 
-Compiler toute la piscine et le hors-pool :
+Compiler le guide, la piscine et le hors-pool :
 
 ```sh
 make
@@ -77,7 +79,11 @@ make clean
 
 ## Prérequis
 
-- Shell Linux, `git`, `grep`, `ctags`.
+- Shell Linux et `grep`.
+- Git limité aux commandes de lecture : `git log`, `git show`, `git diff`.
+  Savoir `commit`/`push` suffit ; aucun rebase ni force-push n'est demandé.
+- `ctags`, Weggli et Semgrep sont **optionnels**. Tous les exercices donnent
+  une commande `grep -RIn` équivalente.
 - Bases de C et, pour les modules avancés, lecture de code noyau.
 - Pour `A-EPI-004` : un laboratoire Active Directory simulé et isolé.
 - Pour `A-EPI-005` : Python 3 et le dépôt compagnon du papier.
@@ -99,12 +105,14 @@ make clean
 - NVD, Microsoft, Semperis et documentation noyau pour les CVE citées.
 
 La cartographie complète des sources et des exercices se trouve dans
-`RESEARCH.md`.
+`RESEARCH.md`. L'explication de la thèse, des hypothèses et des cas se trouve
+dans le PDF `00-guide/PAPER-GUIDE-paper/subject/PAPER-GUIDE-paper_fr.pdf`.
 
 ## État
 
-Les 13 modules sont rédigés, enrichis par les sources 2024-2026 de
-`RESEARCH.md`, couvrent tous les exemples du papier et compilent. Les 52
+Le guide et les 13 modules sont rédigés, enrichis par les sources 2024-2026
+de `RESEARCH.md`, couvrent tous les exemples du papier et compilent. Les 52
 configurations `pendragon` des exercices sont générées ; le rush et l'examen
 n'en ont pas, car ce sont des formats de soutenance et non des exercices à
-rendu fichier.
+rendu fichier. Les PDF finaux sont versionnés : le support élève ne dépend
+d'aucun Markdown.

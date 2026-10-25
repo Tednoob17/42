@@ -1,0 +1,709 @@
+\documentclass{training}
+\schoollogo{../../../resources/latex/crack.pdf}
+\input{../../../resources/latex/epiag-preamble.tex}
+\usepackage{longtable}
+
+\begin{document}
+
+\title{Guide de lecture : Every Patch Is a Guess --- G-EPI-000}
+\subtitle{Thèse, hypothèses, familles et limites}
+\member{Ted ``Tedsig42'' Kouhouenou}{ted.sig42@tutamail.com}
+\summary{Guide autonome pour lire, expliquer et défendre le papier. Il donne la thèse, les trois familles, le modèle de mutation, la boucle d'audit, les hypothèses cas par cas, les limites et une carte exhaustive des exemples. C'est le document de référence à lire avant les modules.}
+\version{1.0}
+\prerequisite{Aucun prérequis technique ; lire les modules avec ce guide ouvert}
+\maketitle
+
+\newpage
+\tableofcontents
+\newpage
+
+\chapter{La thèse en une page}
+
+Le papier ne dit pas que les correctifs sont mauvais. Il dit :
+
+\begin{quote}
+Un correctif de sécurité est une hypothèse sur ce qui pouvait mal tourner.
+Cette hypothèse est locale. Le système, lui, ne l'est pas.
+\end{quote}
+
+Un développeur corrige le chemin qu'il a observé. Il ajoute un test, un
+verrou, une validation de type ou une remise à zéro. Ce faisant, il affirme
+implicitement :
+
+\begin{itemize}
+  \item « le bug est dans cette fonction » ;
+  \item « ce chemin est le seul atteignable » ;
+  \item « cette propriété suffit à protéger la ressource » ;
+  \item « les autres appelants sont déjà protégés » ;
+  \item « la même règle vaut pour toutes les branches, tous les opcodes,
+        tous les protocoles ou tous les backends ».
+\end{itemize}
+
+Le papier prend chacune de ces phrases au sérieux, puis cherche le
+contre-exemple. La faille n'est pas dans la ligne ajoutée : elle est dans
+l'écart entre le modèle du correctif et le modèle réel du système.
+
+D'où la formule centrale :
+
+\begin{quote}
+\textbf{Every patch encodes an assumption about what can go wrong. Your job
+is to find the assumption --- and watch what it mutates into.}
+\end{quote}
+
+La méthode qui en découle :
+
+\begin{enumerate}
+  \item classer le composant dans une famille architecturale ;
+  \item extraire l'hypothèse du diff ;
+  \item chercher les chemins structurellement équivalents qui ne reçoivent
+        pas la même vérification ;
+  \item trier les candidats sans les confondre avec des exploits ;
+  \item mesurer le temps pendant lequel l'hypothèse reste fausse dans le
+        parc réel : le \emph{patch gap}.
+\end{enumerate}
+
+\chapter{Comment l'auteur construit sa preuve}
+
+Le papier mélange quatre niveaux de preuve. Il faut les distinguer pour le
+présenter honnêtement.
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|p{0.18\linewidth}|X|X|}
+\hline
+\textbf{Niveau} & \textbf{Ce que c'est} & \textbf{Exemples} \\ \hline
+Démontré & Étude de cas détaillée, avec code, commit, hypothèse et chemin de
+mutation & nf\_tables, eBPF, io\_uring, Windows \\ \hline
+Observé & Motif répété dans le corpus de 62 CVE, sans analyse exhaustive &
+classifieur, dataset, statistiques \\ \hline
+Cartographié & Cas relié au framework, détails dans l'archive ou les sources
+externes & FreeBSD, XNU \\ \hline
+Extrapolé & Affirmation de portée générale à partir d'un échantillon & « les
+trois familles couvrent tout système stateful » \\ \hline
+\end{tabularx}
+\end{center}
+
+La force du papier est de ne pas cacher le troisième et le quatrième niveau.
+La section 18.11 reconnaît explicitement les faux positifs, les faux négatifs,
+le chevauchement des familles et la portée principalement Linux.
+
+\section*{Le corpus}
+
+Le dépôt compagnon contient \texttt{validation/dataset.csv} (62 CVE) et
+\texttt{validation/methodology.md}. Le classifieur transforme des signaux
+structurels en famille. Le risque évident est circulaire : si les CVE ont été
+choisies parce qu'elles ressemblent aux familles, le classifieur confirme le
+choix. Le papier le reconnaît partiellement ; un auditeur doit le dire plus
+fort.
+
+\section*{Les études de cas}
+
+Quatre domaines servent de preuve :
+
+\begin{itemize}
+  \item nf\_tables : dispersion architecturale et correctif incomplet ;
+  \item eBPF/JIT : oracle prédictif et pruning ;
+  \item io\_uring : proxy concurrent et durée de vie ;
+  \item Windows : machine à états d'authentification et frontières.
+\end{itemize}
+
+Node.js, Apache MINA et FreeBSD/XNU servent de warm-ups ou de mappings
+cross-domain. Ils ne remplacent pas les études de cas complètes.
+
+\chapter{Les trois familles}
+
+Ce ne sont pas des catégories de gravité. Ce sont des \emph{formes de
+gestion} qui prédisent la manière dont un correctif va échouer.
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|p{0.18\linewidth}|X|X|X|}
+\hline
+\textbf{Famille} & \textbf{Question diagnostique} & \textbf{Mode d'échec} &
+\textbf{Exemples} \\ \hline
+Logical Engine & Le composant gère-t-il des objets avec un cycle de vie
+explicite : create, destroy, abort, rollback ? & Une transition d'état n'a
+pas les mêmes invariants que le chemin nominal. & nf\_tables, MINA,
+authentification Windows, COM \\ \hline
+Predictive Oracle & Le composant analyse-t-il une entrée avant de
+l'exécuter ? & Le modèle de l'analyseur est incomplet par rapport au backend
+réel. & vérificateur eBPF, JIT, \texttt{path.normalize()} \\ \hline
+Concurrent Proxy & Le composant partage-t-il de la mémoire ou des ressources
+avec une synchronisation minimale ? & Le moment de la validation n'est pas le
+moment de l'utilisation. & io\_uring, rings, files, completions \\ \hline
+\end{tabularx}
+\end{center}
+
+\section*{Nuance importante sur « Logical Engine »}
+
+Le nom peut tromper. Un Logical Engine n'est pas « un bug de logique » au
+sens vague. C'est un composant qui gère des \emph{cycles de vie} et des
+\emph{transitions d'état}. Le papier insiste sur l'asymétrie :
+
+\begin{itemize}
+  \item le chemin nominal fait \texttt{allocate -> initialize -> commit} ;
+  \item le chemin d'erreur fait \texttt{allocate -> abort} ;
+  \item le chemin de nettoyage fait \texttt{destroy} sans repasser par les
+        mêmes gardes ;
+  \item le correctif ajoute une garde sur un chemin, pas sur les autres.
+\end{itemize}
+
+C'est pour cela que les questions les plus productives sont souvent :
+« que fait le chemin d'abandon ? », « que fait le rollback ? », « que fait le
+timeout ? ».
+
+\section*{Pourquoi les familles se chevauchent}
+
+Un même composant peut être :
+
+\begin{itemize}
+  \item Predictive Oracle au sommet de la pile (il vérifie une entrée) ;
+  \item Logical Engine trois frames plus bas (il gère un état) ;
+  \item Concurrent Proxy sur le côté (il partage une ressource).
+\end{itemize}
+
+Le papier le dit dans la section 14.1 : le vérificateur eBPF est un oracle,
+mais ses décisions de pruning sont aussi un moteur d'état, et les maps
+partagées ajoutent un risque concurrent. La classification n'est donc pas une
+partition formelle : c'est une \emph{heuristique de recherche}.
+
+\chapter{Le modèle de mutation}
+
+\section*{Incomplete-fix variant}
+
+Le correctif ferme le chemin observé, mais la même faiblesse existe déjà
+ailleurs, souvent dans une fonction voisine ou une branche voisine.
+
+\begin{itemize}
+  \item nf\_tables : \texttt{CVE-2023-4244} retire une garde ;
+        \texttt{CVE-2024-1085} apparaît plus tard dans le même sous-système.
+  \item MINA : \texttt{CVE-2026-41409} est corrigée sur 2.0.x, mais 2.1.x et
+        2.2.x reçoivent \texttt{CVE-2026-42778}.
+  \item Node.js : le correctif des noms de lecteur laisse passer les noms de
+        périphériques, puis les chemins UNC.
+\end{itemize}
+
+\section*{Architectural scatter}
+
+Le correctif ferme une instanciation d'une classe, mais l'architecture
+contient plusieurs chemins indépendants qui partagent la même hypothèse.
+
+\begin{itemize}
+  \item nf\_tables : \texttt{CVE-2023-35001} (byteorder) et
+        \texttt{CVE-2024-1086} (verdict) sont deux collisions d'une même
+        dispersion.
+  \item eBPF : \texttt{CVE-2020-27194} corrige \texttt{or}, mais \texttt{and}
+        et \texttt{xor} restent vulnérables ; \texttt{CVE-2021-3490} couvre
+        les trois.
+  \item io\_uring : \texttt{CVE-2021-20226} (refcount de fichiers) et
+        \texttt{CVE-2021-3491} (longueur de buffer) sont deux chemins du même
+        ring.
+  \item Windows : cinq CVE, cinq protocoles, une seule racine de réflexion.
+\end{itemize}
+
+\section*{Structural symmetry bypass}
+
+Le correctif ajoute une garde dans une fonction, mais une fonction
+structurellement symétrique ne la reçoit pas. C'est un cas particulier
+d'architectural scatter, très fréquent dans eBPF et io\_uring.
+
+\section*{Le patch gap}
+
+Le patch gap n'est pas seulement « commit amont vers stable ». C'est la
+chaîne complète :
+
+\begin{console}
+vulnerabilite connue
+  -> correctif ecrit
+  -> correctif livre
+  -> correctif active
+  -> correctif reellement present dans le parc
+\end{console}
+
+Chaque étape peut ajouter du temps. Le papier utilise OtterRoot et V8 mobile
+pour montrer que la fenêtre d'exposition peut être mesurée en semaines ou en
+mois, même après publication du correctif.
+
+\section*{La fenêtre de mutation}
+
+Le papier observe souvent une fenêtre de 12 à 18 mois entre un correctif et
+la variante suivante. Ce n'est pas une loi physique. C'est une observation de
+corpus, utile pour prioriser :
+
+\begin{itemize}
+  \item un sous-système qui a eu une CVE récente ;
+  \item un correctif récent ;
+  \item un twin dans un autre fichier ;
+  \item un chemin atteignable sans privilège.
+\end{itemize}
+
+\chapter{La boucle d'audit différentiel}
+
+La section 4 donne trois étapes ; la section 18.3 donne les commandes
+complètes.
+
+\section*{Étape 1 --- Identifier le code ajouté}
+
+Chaque ligne ajoutée encode une hypothèse :
+
+\begin{console}
++ if (condition) return -EINVAL;
+  -> existe-t-il un autre point d'entree sans ce test ?
+
++ mutex_lock(&x->lock);
+  -> existe-t-il un autre chemin qui touche x sans ce verrou ?
+
++ if (!nft_is_active_next(net, x)) continue;
+  -> existe-t-il une fonction qui utilise encore l'ancienne generation ?
+\end{console}
+
+Commandes utiles :
+
+\begin{console}
+git show <fix_commit> > fix.patch
+grep '^+' fix.patch | grep -v '^+++' | head -40
+grep '^+' fix.patch | grep 'struct\|->use\|->refcount\|genmask'
+\end{console}
+
+\section*{Étape 2 --- Trouver le code parallèle non modifié}
+
+Chercher les fonctions qui opèrent sur la même structure et font un travail
+analogue :
+
+\begin{console}
+grep -RIn --include='*.c' 'nft_setelem' net/netfilter/
+grep -RIn --include='*.c' 'nft_is_active_next' net/netfilter/
+\end{console}
+
+\texttt{ctags} et Weggli sont optionnels. La commande \texttt{grep -RIn}
+donne déjà le fichier, la ligne et le texte ; c'est suffisant pour formuler
+et vérifier une hypothèse.
+
+\section*{Étape 3 --- Vérifier la symétrie}
+
+La ressemblance ne suffit pas. Il faut montrer que le twin partage réellement
+l'invariant, qu'il n'est pas protégé par un autre mécanisme, et qu'il est
+atteignable.
+
+Questions de la section 18.7 :
+
+\begin{enumerate}
+  \item Quelle famille ?
+  \item Quel est le chemin nominal, quels sont les chemins exceptionnels ?
+  \item Que suppose chaque fonction sur l'état qu'elle reçoit ?
+  \item Le correctif est-il symétrique ?
+  \item Qu'est-ce qui a changé récemment pour la performance ?
+\end{enumerate}
+
+La question 4 est présentée comme la plus productive. C'est elle qui mène à
+\texttt{CVE-2024-1085} et \texttt{CVE-2024-0582}.
+
+\chapter{Boîte à outils minimale}
+
+Cette piscine ne demande pas de connaître Git en profondeur. Savoir
+\texttt{commit} et \texttt{push} suffit pour rendre un exercice. Les
+commandes ci-dessous sont en lecture seule : elles ne modifient pas le
+dépôt.
+
+\section*{Git : lire l'historique}
+
+\begin{console}
+git log --oneline -5
+git show COMMIT
+git show COMMIT -- chemin/du/fichier.c
+git diff
+git log -p -- chemin/du/fichier.c
+\end{console}
+
+\begin{itemize}
+  \item \texttt{git log --oneline} affiche les derniers commits, un par
+        ligne.
+  \item \texttt{git show COMMIT} affiche le diff d'un commit.
+  \item \texttt{git diff} affiche ce qui n'est pas encore commité.
+  \item \texttt{git log -p} affiche l'historique avec les diffs.
+\end{itemize}
+
+Aucun \texttt{rebase}, \texttt{cherry-pick} ou \texttt{force-push} n'est
+nécessaire. Si vous ne connaissez pas une commande, notez celle que vous
+avez utilisée et son résultat : c'est ce que le correcteur veut voir.
+
+\section*{grep : chercher sans ctags}
+
+\texttt{ctags} n'est pas requis. Pour trouver une fonction, un appel ou une
+structure :
+
+\begin{console}
+grep -RIn --include='*.c' 'nft_setelem' net/netfilter/
+grep -n 'nft_is_active_next' net/netfilter/nf_tables_api.c
+grep -RIn '->use' net/netfilter/
+\end{console}
+
+\begin{itemize}
+  \item \texttt{-R} descend dans les sous-dossiers ;
+  \item \texttt{-I} ignore les fichiers binaires ;
+  \item \texttt{-n} affiche le numéro de ligne ;
+  \item \texttt{-{}-include='*.c'} limite aux sources C.
+\end{itemize}
+
+Pour trouver les définitions plutôt que les appels :
+
+\begin{console}
+grep -RIn --include='*.c' '^[a-zA-Z_].*nft_setelem.*(' net/netfilter/
+\end{console}
+
+\section*{ctags : seulement si disponible}
+
+Si \texttt{ctags} est installé, il peut accélérer la recherche :
+
+\begin{console}
+ctags -R --c-kinds=f --fields=+n .
+grep 'nft_setelem' tags
+\end{console}
+
+Mais un rendu qui utilise uniquement \texttt{grep} et \texttt{find} est
+parfaitement valide. Le critère n'est pas l'outil : c'est la commande
+reproductible et l'hypothèse qu'elle teste.
+
+\chapter{Les hypothèses, cas par cas}
+
+\section*{nf\_tables}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|p{0.18\linewidth}|X|X|}
+\hline
+\textbf{Cas} & \textbf{Hypothèse du correctif} & \textbf{Angle mort} \\ \hline
+\texttt{CVE-2023-35001} & \texttt{priv->len} octets depuis le registre de
+base suffisent à borner l'accès. & La taille de l'union et le stride de 4 ne
+correspondent pas à \texttt{len/2}. \\ \hline
+\texttt{CVE-2024-1086} & La correction du verdict \texttt{NF\_DROP} ferme la
+classe. & Un autre chemin de verdict produit encore un double-free. \\ \hline
+\texttt{CVE-2023-4244} & Retirer la marque « busy » et l'API de batch GC
+simplifie le cycle de vie. & Une garde préexistante masquait une faiblesse ;
+\texttt{CVE-2024-1085} la révèle. \\ \hline
+\texttt{CVE-2024-1085} & Vérifier la génération « next » avant
+\texttt{kfree()} suffit. & Le bug est une transition de génération, pas un
+simple test manquant. \\ \hline
+\texttt{CVE-2024-26809} & Le commit de nettoyage pipapo couvre les éléments
+déjà commités. & \texttt{priv->dirty} reste vrai si \texttt{set->dead} saute
+\texttt{->commit()} ; double-free. \\ \hline
+\end{tabularx}
+\end{center}
+
+\section*{Node.js}
+
+\texttt{path.normalize()} est un Predictive Oracle : il prédit qu'un chemin
+est sûr pour le système de fichiers.
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|p{0.18\linewidth}|X|X|}
+\hline
+\textbf{Cas} & \textbf{Hypothèse} & \textbf{Angle mort} \\ \hline
+\texttt{CVE-2025-23084} & Un chemin sans lettre de lecteur au début est
+relatif. & \texttt{C:..\textbackslash{}sensitive} est relatif au répertoire
+courant du lecteur C:. \\ \hline
+\texttt{CVE-2025-27210} & Filtrer les noms de lecteur suffit. & \texttt{CON},
+\texttt{PRN}, \texttt{AUX}, \texttt{NUL}, \texttt{COM1-9}, \texttt{LPT1-9}
+sont des périphériques. \\ \hline
+UNC non assigné & Filtrer les périphériques suffit. & Les chemins UNC restent
+valides et peuvent sortir du sous-arbre. \\ \hline
+\end{tabularx}
+\end{center}
+
+La leçon : chaque correctif ajoute une règle au modèle. Il ne prouve pas que
+le modèle couvre toute la sémantique Windows.
+
+\section*{Apache MINA}
+
+Le désérialiseur Java est un Logical Engine :
+
+\begin{console}
+allocate -> initialize -> resolve -> check
+\end{console}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|p{0.18\linewidth}|X|X|}
+\hline
+\textbf{Cas} & \textbf{Hypothèse} & \textbf{Angle mort} \\ \hline
+\texttt{CVE-2024-52046} & Aucun filtre n'est nécessaire si le flux est de
+confiance. & Instanciation arbitraire avant tout contrôle. \\ \hline
+\texttt{CVE-2026-41409} & Une allowlist vérifiée dans \texttt{getObject()}
+protège l'instanciation. & Les initialiseurs statiques s'exécutent avant la
+garde. \\ \hline
+\texttt{CVE-2026-42778} & Le correctif de 2.0.x est complet pour toutes les
+branches. & 2.1.x et 2.2.x ont besoin d'une seconde correction. \\ \hline
+\end{tabularx}
+\end{center}
+
+La question de chasse est : « la correction est-elle appliquée à toutes les
+transitions d'état structurellement équivalentes, ou seulement à celle où le
+bug a été observé ? »
+
+\section*{eBPF/JIT}
+
+Le vérificateur est un Predictive Oracle. Son modèle de domaine est une
+sur-approximation censée être sound ; chaque cas manqué crée un chemin
+concret que le modèle n'a pas anticipé.
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|p{0.18\linewidth}|X|X|}
+\hline
+\textbf{Cas} & \textbf{Hypothèse} & \textbf{Angle mort} \\ \hline
+\texttt{CVE-2020-27194} & Les mêmes champs de bornes conviennent aux
+opérations 32 et 64 bits. & \texttt{scalar32\_min\_max\_or()} utilise des
+champs 64 bits. \\ \hline
+\texttt{CVE-2021-3490} & Le correctif de \texttt{or} couvre toutes les
+opérations ALU32. & \texttt{and}, \texttt{xor} et le cas const-subreg ne sont
+pas corrigés. \\ \hline
+\texttt{CVE-2022-23222} & Faire de l'arithmétique sur un pointeur nullable
+produit un pointeur valide. & \texttt{PTR\_TO\_ALLOC\_MEM\_OR\_NULL} n'est
+pas rejeté avant le null-check. \\ \hline
+\texttt{CVE-2023-2163} & Si un registre est \texttt{!precise}, ses bornes
+n'importent pas pour le pruning. & La précision n'est pas propagée à travers
+les sauts conditionnels. \\ \hline
+\end{tabularx}
+\end{center}
+
+Le cas \texttt{CVE-2023-2163} est important : le raccourci \texttt{!precise}
+existe encore aujourd'hui. Le correctif n'est pas de supprimer le raccourci,
+mais de propager la précision dans \texttt{backtrack\_insn()}.
+
+\section*{io\_uring}
+
+io\_uring est un Concurrent Proxy : les ring buffers sont partagés entre
+utilisateur et noyau, et chaque champ d'un SQE lu avec \texttt{READ\_ONCE()}
+est une fenêtre TOCTOU potentielle.
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|p{0.18\linewidth}|X|X|}
+\hline
+\textbf{Cas} & \textbf{Hypothèse} & \textbf{Angle mort} \\ \hline
+\texttt{CVE-2021-20226} & Corriger le refcount de \texttt{files\_struct}
+dans \texttt{io\_grab\_files()} ferme la classe. & Un autre chemin du même
+ring ne valide pas la durée de vie. \\ \hline
+\texttt{CVE-2021-3491} & La validation des buffers fournis est suffisante. &
+La longueur n'est pas plafonnée à \texttt{MAX\_RW\_COUNT}. \\ \hline
+\texttt{CVE-2023-2598} & Le fast path des pages composées est sûr. & Deux
+adresses virtuelles peuvent mapper la même page physique. \\ \hline
+\texttt{CVE-2024-0582} & Le durcissement de l'enregistrement des buffers
+fixes couvre tous les buffers. & Le PBUF ring a son propre cycle de vie ;
+\texttt{mmap} survit à \texttt{unregister}. \\ \hline
+\end{tabularx}
+\end{center}
+
+La formule du papier : « When every path is fast, which one is safe ? »
+
+\section*{Windows}
+
+La chaîne d'authentification Windows est un Logical Engine réparti sur
+plusieurs protocoles. Chaque correctif ajoute une garde à un composant sans
+établir l'invariant global.
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|p{0.18\linewidth}|X|X|}
+\hline
+\textbf{Cas} & \textbf{Hypothèse} & \textbf{Angle mort} \\ \hline
+\texttt{CVE-2025-33073} & Bloquer le CMTI dans \texttt{mrxsmb.sys} ferme la
+réflexion. & D'autres primitives de coercition et de relais restent
+possibles. \\ \hline
+\texttt{CVE-2025-58726} & Un SPN supprimé ne peut plus être utilisé. & Le
+compte de service existe encore ; le KDC émet un ticket pour l'ancien
+SPN. \\ \hline
+\texttt{CVE-2026-24294} & Le contrôle loopback couvre les ports SMB
+standards. & Un serveur SMB local sur un port arbitraire peut recevoir et
+relayer le handshake. \\ \hline
+\texttt{CVE-2026-26128} & La normalisation DNS et SPN est cohérente. & Le KDC
+normalise Unicode, DnsCache non ; un homoglyphe passe. \\ \hline
+\texttt{CVE-2026-26119} & L'EPA est appliqué aux endpoints WAC. & La
+validation du contexte d'authentification est contournable. \\ \hline
+\texttt{CVE-2026-50343} & Le problème est la carte de plugins
+\texttt{InstallService}. & La classe COM CrossDevice reste enregistrée sous
+\texttt{\%PROGRAMDATA\%}. \\ \hline
+\texttt{CVE-2026-66804} & Le correctif de \texttt{InstallService} ferme la
+chaîne. & L'enregistrement COM orphelin reste une frontière de
+chargement. \\ \hline
+\end{tabularx}
+\end{center}
+
+\section*{FreeBSD et XNU}
+
+La section 18.11 cite :
+
+\begin{itemize}
+  \item FreeBSD \texttt{CVE-2026-42511} (\texttt{dhclient}) ;
+  \item FreeBSD \texttt{CVE-2026-4747} (NFS) ;
+  \item XNU IOKit \texttt{IOUserClient} et Mach IPC.
+\end{itemize}
+
+Ces cas sont \emph{cartographiés}, pas analysés en profondeur dans le corps du
+papier. Les détails sont annoncés dans \texttt{cross-kernel/} de l'archive.
+Il faut donc les traiter comme des hypothèses de portée, pas comme des
+preuves équivalentes aux études nf\_tables/eBPF/io\_uring.
+
+\chapter{Les motifs qui reviennent}
+
+Le papier ne donne pas une liste de bugs. Il donne des \emph{patterns de
+dispersion} :
+
+\begin{itemize}
+  \item \textbf{par branche} : 2.0.x corrigé, 2.1.x oublié (MINA) ;
+  \item \textbf{par opcode} : un chemin io\_uring corrigé, les autres non ;
+  \item \textbf{par protocole} : SMB corrigé, HTTP/Kerberos non (Windows) ;
+  \item \textbf{par type} : \texttt{or} corrigé, \texttt{and}/\texttt{xor}
+        non (eBPF) ;
+  \item \textbf{par génération} : \texttt{nft\_is\_active} au lieu de
+        \texttt{nft\_is\_active\_next} ;
+  \item \textbf{par backend} : vérificateur corrigé, JIT non ;
+  \item \textbf{par chemin de nettoyage} : commit corrigé, abort/rollback non.
+\end{itemize}
+
+La question d'audit se déplace donc de « où est le bug ? » vers « quelle
+dimension le correctif n'a-t-il pas couverte ? ».
+
+\chapter{Les limites du papier}
+
+À assumer explicitement en soutenance :
+
+\begin{enumerate}
+  \item \textbf{Faux positifs} : un twin structurel peut être inatteignable ou
+        protégé par un autre invariant.
+  \item \textbf{Faux négatifs} : les interactions cross-family et les
+        comportements matériels peuvent échapper à une classification
+        mono-famille.
+  \item \textbf{Chevauchement} : les trois familles ne sont pas mutuellement
+        exclusives ; la classification est une heuristique.
+  \item \textbf{Portée} : le framework est développé sur Linux, validé sur
+        Windows, cartographié sur FreeBSD/XNU.
+  \item \textbf{Circularité possible} : le corpus et le classifieur peuvent se
+        confirmer l'un l'autre.
+  \item \textbf{Candidat n'est pas exploit} : le framework produit des
+        candidats, pas des vulnérabilités confirmées.
+  \item \textbf{Outils imparfaits} : les macros, \texttt{void *}, les unions,
+        les appels indirects et la concurrence dégradent l'AST (section
+        18.1).
+  \item \textbf{Patch gap non mesuré partout} : les dates de commit ne disent
+        pas quand un correctif est réellement activé dans le parc.
+\end{enumerate}
+
+La concession la plus honnête : le papier prouve surtout que \emph{la méthode
+trouve des cas réels dans les sous-systèmes qu'il a choisis}, pas qu'elle
+trouve tous les cas dans tous les systèmes.
+
+\chapter{Comment le présenter en vingt minutes}
+
+\begin{enumerate}
+  \item \textbf{3 min --- le problème} : un patch est une hypothèse locale ;
+        le système ne l'est pas.
+  \item \textbf{5 min --- les trois familles} : Logical Engine, Predictive
+        Oracle, Concurrent Proxy, avec un exemple minimal pour chacune.
+  \item \textbf{6 min --- la boucle} : diff, twin, vérification ; montrer un
+        cas nf\_tables et un faux positif volontaire.
+  \item \textbf{3 min --- les preuves} : corpus, études de cas, patch gap.
+  \item \textbf{3 min --- les limites et ce que l'auditeur peut réutiliser
+        demain}.
+\end{enumerate}
+
+Phrase de conclusion possible :
+
+\begin{quote}
+« Le correctif n'est pas la fin de l'analyse. C'est l'énoncé d'une hypothèse
+qu'il faut tester ailleurs. »
+\end{quote}
+
+\chapter{Carte exhaustive des exemples}
+
+\begin{center}
+\small
+\renewcommand{\arraystretch}{0.95}
+\begin{longtable}{|p{0.16\linewidth}|p{0.06\linewidth}|p{0.16\linewidth}|p{0.32\linewidth}|p{0.18\linewidth}|}
+\hline
+\textbf{CVE} & \textbf{Section} & \textbf{Famille} & \textbf{Hypothèse / angle mort} & \textbf{Module} \\ \hline
+\endfirsthead
+\hline
+\textbf{CVE} & \textbf{Section} & \textbf{Famille} & \textbf{Hypothèse / angle mort} & \textbf{Module} \\ \hline
+\endhead
+\texttt{CVE-2023-35001} & 6.2 & Predictive Oracle & \texttt{priv->len} borne
+l'accès ; la taille de l'union et le stride non. & M-EPI-003, A-EPI-002 \\ \hline
+\texttt{CVE-2024-1086} & 6.2 & Predictive Oracle & Le verdict \texttt{NF\_DROP}
+est corrigé ; un autre chemin de verdict non. & M-EPI-003, A-EPI-002 \\ \hline
+\texttt{CVE-2023-4244} & 6.3 & Logical Engine & Retirer la garde simplifie le
+cycle de vie ; elle masquait une faiblesse. & M-EPI-000, M-EPI-003 \\ \hline
+\texttt{CVE-2024-1085} & 6.3 & Logical Engine & Vérifier la génération next
+suffit ; le bug est une transition d'état. & M-EPI-000, M-EPI-003 \\ \hline
+\texttt{CVE-2025-23084} & 13.1 & Predictive Oracle & Un chemin sans lecteur est
+relatif ; \texttt{C:..} ne l'est pas. & A-EPI-006 \\ \hline
+\texttt{CVE-2025-27210} & 13.1 & Predictive Oracle & Filtrer les lecteurs
+suffit ; les noms de périphériques passent. & A-EPI-006 \\ \hline
+UNC non assigné & 13.1 & Predictive Oracle & Filtrer les périphériques suffit ;
+les chemins UNC passent. & A-EPI-006 \\ \hline
+\texttt{CVE-2024-52046} & 13.2 & Logical Engine & Aucun filtre n'est nécessaire ;
+instanciation avant contrôle. & A-EPI-006 \\ \hline
+\texttt{CVE-2026-41409} & 13.2 & Logical Engine & L'allowlist protège ; les
+initialiseurs statiques s'exécutent avant. & A-EPI-006 \\ \hline
+\texttt{CVE-2026-42778} & 13.2 & Logical Engine & 2.0.x est complet ; 2.1.x et
+2.2.x ne le sont pas. & A-EPI-006 \\ \hline
+\texttt{CVE-2020-27194} & 14.2 & Predictive Oracle & Les bornes 64 bits
+conviennent au 32 bits ; non. & M-EPI-004, A-EPI-003 \\ \hline
+\texttt{CVE-2021-3490} & 14.3 & Predictive Oracle & \texttt{or} couvre tout
+l'ALU32 ; \texttt{and}/\texttt{xor} restent. & M-EPI-004, A-EPI-003 \\ \hline
+\texttt{CVE-2022-23222} & 14.4 & Predictive Oracle & L'arithmétique sur
+OR\_NULL produit un pointeur valide ; non. & M-EPI-004, A-EPI-003 \\ \hline
+\texttt{CVE-2023-2163} & 14.5 & Predictive Oracle & \texttt{!precise} ignore
+les bornes ; la précision n'est pas propagée. & M-EPI-004, A-EPI-003 \\ \hline
+\texttt{CVE-2021-20226} & 15.2 & Concurrent Proxy & Le refcount de
+\texttt{files\_struct} ferme la classe ; un autre chemin non. & M-EPI-004,
+A-EPI-003 \\ \hline
+\texttt{CVE-2021-3491} & 15.2 & Concurrent Proxy & La validation des buffers
+suffit ; la longueur n'est pas plafonnée. & M-EPI-004, A-EPI-003 \\ \hline
+\texttt{CVE-2023-2598} & 15.3 & Concurrent Proxy & Le fast path des pages
+composées est sûr ; deux mappings physiques non. & M-EPI-004, A-EPI-003 \\ \hline
+\texttt{CVE-2024-0582} & 15.3 & Concurrent Proxy & Le durcissement des buffers
+fixes couvre tout ; le PBUF ring non. & M-EPI-004, A-EPI-003 \\ \hline
+\texttt{CVE-2025-33073} & 16.2 & Logical Engine & Le CMTI ferme la réflexion ;
+d'autres coercitions restent. & A-EPI-004 \\ \hline
+\texttt{CVE-2025-58726} & 16.2 & Logical Engine & Un SPN supprimé est
+inutilisable ; le compte existe encore. & A-EPI-004 \\ \hline
+\texttt{CVE-2026-24294} & 16.2 & Logical Engine & Le loopback couvre les ports
+standards ; un port arbitraire passe. & A-EPI-004 \\ \hline
+\texttt{CVE-2026-26128} & 16.2 & Logical Engine & DNS et SPN normalisent
+pareil ; le KDC normalise Unicode. & A-EPI-004 \\ \hline
+\texttt{CVE-2026-26119} & 16.2 & Logical Engine & L'EPA protège WAC ; le
+contexte d'authentification est contournable. & A-EPI-004 \\ \hline
+\texttt{CVE-2026-42511} & 18.11 & Logical Engine ? & Mapping FreeBSD
+\texttt{dhclient}, détails dans l'archive. & A-EPI-006 \\ \hline
+\texttt{CVE-2026-4747} & 18.11 & Concurrent Proxy ? & Mapping FreeBSD NFS,
+détails dans l'archive. & A-EPI-006 \\ \hline
+\end{longtable}
+\normalsize
+\end{center}
+
+Les CVE \texttt{CVE-2024-26809}, \texttt{CVE-2026-50343} et
+\texttt{CVE-2026-66804} sont des prolongements 2024-2026 utilisés dans les
+modules ; elles ne font pas partie des 24 CVE citées dans le corps du papier.
+
+\chapter{Sources et liens}
+
+\begin{itemize}
+  \item Papier : \texttt{every-patch-is-a-guess-full.txt}.
+  \item Dépôt compagnon : \texttt{rules/}, \texttt{validation/},
+        \texttt{classifier/}.
+  \item Project Zero, \emph{How to fix a bug in a fix} :
+        \url{https://projectzero.google/2026/10/emergency-patching.html}
+  \item Project Zero, \emph{Dangling COM Object Registrations} :
+        \url{https://projectzero.google/2026/09/windows-dangling-com.html}
+  \item Project Zero, \emph{Testing race conditions with memory access
+        tracing and stack-based delay injection} :
+        \url{https://projectzero.google/2026/09/maccconc-race-condition.html}
+  \item OtterSec, \emph{OtterRoot: Netfilter universal root 1-day} :
+        \url{https://osec.io/blog/netfilter-universal-root-1-day/}
+  \item OtterSec, \emph{Patch gap to mobile renderer RCE} :
+        \url{https://osec.io/blog/patch-gap-to-mobile-renderer-rce/}
+  \item Calif, \emph{Dark Elevator} :
+        \url{https://blog.calif.io/p/dark-elevator-windows-install-service}
+  \item Synacktiv, \emph{The Gift That Keeps on Giving} :
+        \url{https://www.synacktiv.com/sites/default/files/2026-05/bypassing_authentication_reflections_mitigations_for_system_shells.pdf}
+  \item NVD : \url{https://nvd.nist.gov/}
+  \item Node.js, \emph{path} : \url{https://nodejs.org/api/path.html}
+  \item Apache MINA, avis CVE-2024-52046, CVE-2026-41409, CVE-2026-42778.
+  \item FreeBSD, avis de sécurité :
+        \url{https://www.freebsd.org/security/advisories/}
+\end{itemize}
+
+\end{document}

@@ -343,6 +343,14 @@ vérification exhaustive de la carte des exemples. Il porte aussi la
 distinction entre ce que le papier démontre, observe, cartographie et
 extrapole.
 
+## Guide de lecture
+
+Le PDF `00-guide/PAPER-GUIDE-paper/subject/PAPER-GUIDE-paper_fr.pdf`
+contient la thèse, les trois familles, le modèle de mutation, la boucle
+d'audit, les hypothèses cas par cas, les limites et une carte exhaustive des
+exemples. Il sert de support de soutenance et de référence pour les modules.
+Aucun support élève ne dépend d'un Markdown.
+
 ## Limites et recherches restantes
 
 - Retrouver l'article Synacktiv sur les services AD légitimes.

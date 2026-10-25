@@ -48,9 +48,10 @@ et des invariants différents. L'étape 3 existe pour éliminer ces faux
 positifs.
 
 \begin{info}
-Le papier utilise \texttt{ctags} et \texttt{grep} parce qu'ils sont
-disponibles partout et qu'ils obligent à formuler une requête. Un outil plus
-puissant ne remplace pas la formulation de l'hypothèse.
+Le papier utilise \texttt{grep} et, quand il est disponible, \texttt{ctags}.
+\texttt{ctags} n'est pas obligatoire : \texttt{grep -RIn} suffit pour cette
+piscine. L'important est de formuler une requête et de pouvoir la refaire.
+Un outil plus puissant ne remplace pas l'hypothèse.
 \end{info}
 
 \chapter{Aperçu du module}
@@ -60,7 +61,7 @@ puissant ne remplace pas la formulation de l'hypothèse.
 \hline
 \textbf{Ex} & \textbf{Titre} & \textbf{Difficulté} & \textbf{Points} \\ \hline
 00 & Extraire le code ajouté & Facile & 3 \\
-01 & Trouver les twins avec ctags & Moyen & 4 \\
+01 & Trouver les twins avec grep & Moyen & 4 \\
 02 & Vérifier la symétrie & Moyen & 5 \\
 03 & Triage de dix candidats & Difficile & 4 \\ \hline
 & \textbf{Total} & & \textbf{16} \\ \hline
@@ -108,22 +109,27 @@ correctif peut ajouter une affectation, un appel de fonction, ou déplacer
 une vérification.}
 
 \chapter{Exercise 01}
-\extitle{Trouver les twins avec ctags}
+\extitle{Trouver les twins avec grep}
 \turnindir{ex01}
 \exnumber{01}
 \exfiles{twins.md}
-\exauthorize{ctags, grep, find, un éditeur de texte}
+\exauthorize{grep, find, un éditeur de texte}
 \makeheaderfiles
 
 Les « twins » sont les fonctions qui font un travail analogue dans un autre
 chemin. Elles ne sont pas nécessairement des copies.
 
-\subsection*{Préparer l'index}
+\subsection*{Préparer la recherche}
 
 \begin{console}
-ctags -R --c-kinds=f --fields=+n linux/net/netfilter > /tmp/nft.tags
-grep -i 'catchall' /tmp/nft.tags
+grep -RIn --include='*.c' 'nft_setelem' linux/net/netfilter > /tmp/nft-hits.txt
+grep -i 'catchall' /tmp/nft-hits.txt
 \end{console}
+
+Si \texttt{ctags} est installé, vous pouvez aussi créer un index
+(\texttt{ctags -R --c-kinds=f --fields=+n linux/net/netfilter}). Ce n'est
+pas exigé : la commande \texttt{grep} ci-dessus donne déjà les fichiers et
+les lignes.
 
 \subsection*{Mission}
 
@@ -249,13 +255,14 @@ Triage & Score cohérent avec la grille & 4 \\ \hline
         \texttt{grep '\string^+'}, \texttt{grep -v '\string^+++'}.
 \end{itemize}
 
-\subsection*{Exercice 01 --- Trouver les twins avec ctags}
+\subsection*{Exercice 01 --- Trouver les twins avec grep}
 \begin{itemize}
-  \item Universal Ctags : \url{https://docs.ctags.io/}
-  \item Weggli : \url{https://github.com/weggli-rs/weggli}
-  \item Semgrep : \url{https://semgrep.dev/docs/}
+  \item \texttt{grep} : \url{https://www.gnu.org/software/grep/manual/}
+  \item Optionnel : Universal Ctags : \url{https://docs.ctags.io/}
+  \item Optionnel : Weggli : \url{https://github.com/weggli-rs/weggli}
+  \item Optionnel : Semgrep : \url{https://semgrep.dev/docs/}
   \item Papier, sections 4 et 18.3.
-  \item À chercher : \texttt{ctags -R --c-kinds=f}, \texttt{nft\_setelem},
+  \item À chercher : \texttt{grep -RIn}, \texttt{nft\_setelem},
         \texttt{\_deactivate}, \texttt{\_destroy}.
 \end{itemize}
 
@@ -287,7 +294,7 @@ Triage & Score cohérent avec la grille & 4 \\ \hline
         sections 3, 6 et 7.
   \item Dépôt compagnon : \texttt{rules/TRIAGE.md},
         \texttt{validation/methodology.md}.
-  \item Universal Ctags : \url{https://docs.ctags.io/}
+  \item Optionnel : Universal Ctags : \url{https://docs.ctags.io/}
 \end{itemize}
 
 \end{document}

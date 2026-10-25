@@ -209,7 +209,7 @@ supprimé une garde qui cachait un autre bug ».}
 \turnindir{ex03}
 \exnumber{03}
 \exfiles{autopsy.md}
-\exauthorize{git, grep, ctags, un éditeur de texte}
+\exauthorize{git, grep, un éditeur de texte}
 \makeheaderfiles
 
 Choisissez un correctif public dans un sous-système que vous pouvez lire
@@ -228,8 +228,8 @@ Produisez \texttt{autopsy.md} avec exactement six sections :
         patch.
   \item \textbf{Chemin non couvert} : un appelant, un chemin d'abandon ou une
         fonction voisine qui n'a pas reçu le même test.
-  \item \textbf{Test de l'hypothèse} : une commande \texttt{grep} ou
-        \texttt{ctags} qui vérifie votre hypothèse.
+  \item \textbf{Test de l'hypothèse} : une commande \texttt{grep} qui
+        vérifie votre hypothèse.
   \item \textbf{Verdict} : patch complet, patch local, ou patch qui déplace
         le problème. Justifiez en cinq lignes.
 \end{enumerate}
@@ -305,9 +305,9 @@ Soutenance & Explication claire en cinq minutes & 4 \\ \hline
 \begin{itemize}
   \item NVD : \url{https://nvd.nist.gov/}
   \item Noyau Linux : \url{https://git.kernel.org/}
-  \item Universal Ctags : \url{https://docs.ctags.io/}
-  \item Semgrep : \url{https://semgrep.dev/docs/}
-  \item À chercher : \texttt{git show <commit>}, \texttt{ctags -R},
+  \item Optionnel : Universal Ctags : \url{https://docs.ctags.io/}
+  \item Optionnel : Semgrep : \url{https://semgrep.dev/docs/}
+  \item À chercher : \texttt{git show <commit>}, \texttt{grep -RIn},
         \texttt{grep '\string^+' fix.patch}.
 \end{itemize}
 

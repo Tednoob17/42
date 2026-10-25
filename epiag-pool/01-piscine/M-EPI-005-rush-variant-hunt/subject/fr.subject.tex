@@ -72,7 +72,7 @@ Appliquez la boucle :
 \begin{enumerate}
   \item \textbf{Extraire} : les lignes ajoutées et la fonction.
   \item \textbf{Paralléliser} : au moins cinq fonctions voisines, avec
-        \texttt{ctags} et \texttt{grep}.
+        \texttt{grep} (et \texttt{ctags} si disponible).
   \item \textbf{Vérifier} : pour chaque twin, l'invariant partagé, le test
         manquant, et le statut.
   \item \textbf{Trier} : score selon la grille du papier.
@@ -82,8 +82,8 @@ Livrables intermédiaires :
 
 \begin{console}
 queries/
-|-- ctags.txt
 |-- grep.txt
+|-- find.txt
 +-- notes.md
 analysis.md
 \end{console}
@@ -136,11 +136,12 @@ Soutenance & Cinq minutes claires, questions maîtrisées & 2 \\ \hline
 
 \subsection*{Partie B --- Analyse}
 \begin{itemize}
-  \item Universal Ctags : \url{https://docs.ctags.io/}
-  \item Weggli : \url{https://github.com/weggli-rs/weggli}
-  \item Semgrep : \url{https://semgrep.dev/docs/}
+  \item \texttt{grep} : \url{https://www.gnu.org/software/grep/manual/}
+  \item Optionnel : Universal Ctags : \url{https://docs.ctags.io/}
+  \item Optionnel : Weggli : \url{https://github.com/weggli-rs/weggli}
+  \item Optionnel : Semgrep : \url{https://semgrep.dev/docs/}
   \item Papier, sections 4 et 18.3.
-  \item À chercher : \texttt{ctags -R}, \texttt{grep '\string^+'}, \texttt{twin},
+  \item À chercher : \texttt{grep -RIn}, \texttt{grep '\string^+'}, \texttt{twin},
         \texttt{structural symmetry}.
 \end{itemize}
 

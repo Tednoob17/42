@@ -20,8 +20,8 @@
   \item Durée : 3 heures. Aucun accès Internet, aucune note, aucun outil
         d'IA.
   \item Le correctif et les sources nécessaires sont fournis localement.
-  \item Vous pouvez utiliser \texttt{git}, \texttt{grep}, \texttt{ctags},
-        \texttt{diff} et un éditeur de texte.
+  \item Vous pouvez utiliser \texttt{git}, \texttt{grep}, \texttt{find},
+        \texttt{diff} et un éditeur de texte. \texttt{ctags} est optionnel.
   \item Aucun exploit, aucun test sur une cible réelle.
   \item Les réponses non justifiées ne rapportent pas de points.
 \end{itemize}
@@ -70,7 +70,8 @@ Pour chacune, indiquez :
   \item le statut : candidat sérieux, faux positif, ou à vérifier.
 \end{enumerate}
 
-Vous devez fournir les commandes \texttt{ctags} et \texttt{grep} utilisées.
+Vous devez fournir les commandes \texttt{grep} (et \texttt{find} si besoin)
+utilisées. \texttt{ctags} n'est pas exigé.
 
 \exampoints{5}
 
@@ -127,10 +128,10 @@ Un seul fichier \texttt{exam.md} par étudiant, avec les sections suivantes :
   \item Papier, sections 3, 4 et 18.3 : famille, hypothèse, twins.
   \item Dépôt compagnon : \texttt{rules/TRIAGE.md},
         \texttt{validation/methodology.md}.
-  \item Universal Ctags : \url{https://docs.ctags.io/}
+  \item Optionnel : Universal Ctags : \url{https://docs.ctags.io/}
   \item NVD : \url{https://nvd.nist.gov/}
   \item À réviser : \texttt{git show}, \texttt{grep '\string^+'},
-        \texttt{ctags -R}, \texttt{nft\_is\_active\_next}, \texttt{regsafe},
+        \texttt{grep -RIn}, \texttt{nft\_is\_active\_next}, \texttt{regsafe},
         \texttt{fdget}.
 \end{itemize}
 

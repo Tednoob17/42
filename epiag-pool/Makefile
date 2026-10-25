@@ -1,4 +1,4 @@
-MODULES := $(wildcard 01-piscine/*/subject) $(wildcard 02-hors-pool/*/subject)
+MODULES := $(wildcard 00-guide/*/subject) $(wildcard 01-piscine/*/subject) $(wildcard 02-hors-pool/*/subject)
 
 .PHONY: all clean distclean
 
