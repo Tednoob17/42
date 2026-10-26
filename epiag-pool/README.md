@@ -79,10 +79,7 @@ make clean
 
 ## Prérequis
 
-- Shell Linux et `grep`.
-- Git limité aux commandes de lecture : `git log`, `git show`, `git diff`.
-  Savoir `commit`/`push` suffit ; aucun rebase ni force-push n'est demandé.
-- `ctags`, Weggli et Semgrep sont **optionnels**. Tous les exercices donnent
+- Shell Linux.
   une commande `grep -RIn` équivalente.
 - Bases de C et, pour les modules avancés, lecture de code noyau.
 - Pour `A-EPI-004` : un laboratoire Active Directory simulé et isolé.
